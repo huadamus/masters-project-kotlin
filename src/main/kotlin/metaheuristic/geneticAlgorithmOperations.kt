@@ -6,11 +6,9 @@ import simulation.GenomeGenerator
 import ELITISM
 import POPULATION_SIZE
 import TOURNAMENT_PICKS
-import model.CombinedGenome
 import model.Genome
 import model.OffensiveGenome
 import simulation.SimulationOutcome
-import simulation.SingularSimulationOutcome
 
 fun initializeGenomes(periodMonths: Int): List<Genome> {
     val output = mutableListOf<Genome>()
@@ -28,15 +26,7 @@ fun initializeOffensiveGenomes(periodMonths: Int): List<OffensiveGenome> {
     return output
 }
 
-fun initializeCombinedGenomes(periodMonths: Int): List<CombinedGenome> {
-    val output = mutableListOf<CombinedGenome>()
-    for (i in 0 until POPULATION_SIZE) {
-        output += GenomeGenerator.generateCombinedGenome(periodMonths)
-    }
-    return output
-}
-
-fun getNewGenerationDefensiveGenomes(outcomes: List<SingularSimulationOutcome>): List<Genome> {
+fun getNewGenerationDefensiveGenomes(outcomes: List<SimulationOutcome>): List<Genome> {
     val selectedGenomes = selectWithTournament(outcomes).shuffled()
     return getMutatedGenomes(getCrossoverDefensiveGenomes(selectedGenomes))
 }
@@ -46,12 +36,7 @@ fun getNewGenerationOffensiveGenomes(outcomes: List<OffensiveGenome>): List<Offe
     return getMutatedGenomes(getCrossoverOffensiveGenomes(selectedGenomes)) as List<OffensiveGenome>
 }
 
-fun getNewGenerationCombinedGenomes(outcomes: List<SingularSimulationOutcome>): List<CombinedGenome> {
-    val selectedGenomes = selectWithTournament(outcomes).shuffled() as List<CombinedGenome>
-    return getMutatedGenomes(getCrossoverCombinedGenomes(selectedGenomes)) as List<CombinedGenome>
-}
-
-fun getNewGenerationDefensiveGenomesByRankAndVolume(outcomes: List<SingularSimulationOutcome>): List<Genome> {
+fun getNewGenerationDefensiveGenomesByRankAndVolume(outcomes: List<SimulationOutcome>): List<Genome> {
     val rankedOutcomes = getRankedDefensiveOutcomes(outcomes)
     val rankedOutcomesWithVolume = getRankedDefensiveOutcomesVolume(rankedOutcomes)
     val selectedGenomes = selectWithTournamentByRankAndVolume(rankedOutcomesWithVolume)
@@ -64,14 +49,6 @@ fun getNewGenerationOffensiveGenomesByRankAndVolume(outcomes: List<OffensiveGeno
     val rankedOutcomesWithVolume = getRankedOffensiveOutcomesVolume(rankedOutcomes)
     val selectedGenomes = selectWithTournamentByRankAndVolume(rankedOutcomesWithVolume)
     return getMutatedGenomes(getCrossoverOffensiveGenomes(selectedGenomes)) as List<OffensiveGenome>
-}
-
-@Suppress("UNCHECKED_CAST")
-fun getNewGenerationCombinedGenomesByRankAndVolume(outcomes: List<SingularSimulationOutcome>): List<CombinedGenome> {
-    val rankedOutcomes = getRankedCombinedOutcomes(outcomes)
-    val rankedOutcomesWithVolume = getRankedCombinedOutcomesVolume(rankedOutcomes)
-    val selectedGenomes = selectWithTournamentByRankAndVolume(rankedOutcomesWithVolume)
-    return getMutatedGenomes(getCrossoverCombinedGenomes(selectedGenomes)) as List<CombinedGenome>
 }
 
 fun paretoEvaluateOffensiveGenomes(outcomes: List<OffensiveGenome>): List<OffensiveGenome> {
@@ -129,13 +106,13 @@ fun calculateParetoPurity(frontToCalculatePurity: List<SimulationOutcome>, mainF
     return undominated.toDouble() / mainFront.size.toDouble()
 }
 
-private fun getRankedDefensiveOutcomes(outcomes: List<SingularSimulationOutcome>):
-        MutableList<Pair<SingularSimulationOutcome, Int>> {
+private fun getRankedDefensiveOutcomes(outcomes: List<SimulationOutcome>):
+        MutableList<Pair<SimulationOutcome, Int>> {
     val remainingOutcomes = outcomes.toMutableList()
-    val output = mutableListOf<Pair<SingularSimulationOutcome, Int>>()
+    val output = mutableListOf<Pair<SimulationOutcome, Int>>()
     var currentFront = 1
     while (remainingOutcomes.isNotEmpty()) {
-        val nextFront = paretoEvaluate(remainingOutcomes) as List<SingularSimulationOutcome>
+        val nextFront = paretoEvaluate(remainingOutcomes)
         output += nextFront.map { Pair(it, currentFront) }
         remainingOutcomes -= nextFront.toSet()
         currentFront++
@@ -156,21 +133,7 @@ private fun getRankedOffensiveOutcomes(outcomes: List<OffensiveGenome>): Mutable
     return output
 }
 
-private fun getRankedCombinedOutcomes(outcomes: List<SingularSimulationOutcome>):
-        MutableList<Pair<SingularSimulationOutcome, Int>> {
-    val remainingOutcomes = outcomes.toMutableList()
-    val output = mutableListOf<Pair<SingularSimulationOutcome, Int>>()
-    var currentFront = 1
-    while (remainingOutcomes.isNotEmpty()) {
-        val nextFront = paretoEvaluate(remainingOutcomes)
-        output += nextFront.map { Pair(it as SingularSimulationOutcome, currentFront) }
-        remainingOutcomes -= nextFront.toSet() as Set<SingularSimulationOutcome>
-        currentFront++
-    }
-    return output
-}
-
-private fun getRankedDefensiveOutcomesVolume(outcomes: List<Pair<SingularSimulationOutcome, Int>>):
+private fun getRankedDefensiveOutcomesVolume(outcomes: List<Pair<SimulationOutcome, Int>>):
         List<Triple<Genome, Int, Double>> {
     val output = mutableListOf<Triple<Genome, Int, Double>>()
     var currentFront = 1
@@ -237,43 +200,7 @@ private fun getRankedOffensiveOutcomesVolume(outcomes: List<Pair<OffensiveGenome
     return output
 }
 
-private fun getRankedCombinedOutcomesVolume(outcomes: List<Pair<SingularSimulationOutcome, Int>>): List<Triple<CombinedGenome, Int, Double>> {
-    val output = mutableListOf<Triple<CombinedGenome, Int, Double>>()
-    var currentFront = 1
-    outer@ while (output.size != outcomes.size) {
-        val outcomesFromCurrentFront = outcomes.filter { it.second == currentFront }
-        if (outcomesFromCurrentFront.size == 1) {
-            output += Triple(
-                outcomesFromCurrentFront[0].first.genome.clone() as CombinedGenome,
-                outcomesFromCurrentFront[0].second,
-                1.0
-            )
-            continue@outer
-        }
-        val sortedByProfitsOutcomes = outcomesFromCurrentFront.sortedBy { it.first.profits }
-        for (i in sortedByProfitsOutcomes.indices) {
-            output += Triple(
-                sortedByProfitsOutcomes[i].first.genome.clone() as CombinedGenome,
-                sortedByProfitsOutcomes[i].second,
-                when (i) {
-                    0 -> sortedByProfitsOutcomes[1].first.profits * sortedByProfitsOutcomes[1].first.risk
-                    sortedByProfitsOutcomes.size - 1 ->
-                        (sortedByProfitsOutcomes[i].first.profits
-                                - sortedByProfitsOutcomes[i - 1].first.profits) * (sortedByProfitsOutcomes[i].first.risk
-                                - sortedByProfitsOutcomes[i - 1].first.risk)
-                    else ->
-                        (sortedByProfitsOutcomes[i + 1].first.profits
-                                - sortedByProfitsOutcomes[i - 1].first.profits) * (sortedByProfitsOutcomes[i + 1].first.risk
-                                - sortedByProfitsOutcomes[i - 1].first.risk)
-                }
-            )
-        }
-        currentFront++
-    }
-    return output
-}
-
-fun selectWithTournament(outcomes: List<SingularSimulationOutcome>): List<Genome> {
+fun selectWithTournament(outcomes: List<SimulationOutcome>): List<Genome> {
     val output = mutableListOf<Genome>()
     while (output.size < POPULATION_SIZE - ELITISM) {
         val tournament = outcomes.shuffled().take(TOURNAMENT_PICKS)
@@ -312,20 +239,6 @@ private fun getMutatedGenomes(genomes: List<Genome>): List<Genome> {
     }
     for (genome in output) {
         genome.mutate()
-    }
-    return output
-}
-
-private fun getCrossoverCombinedGenomes(genomes: List<CombinedGenome>): List<CombinedGenome> {
-    val output = mutableListOf<CombinedGenome>()
-    for (i in genomes.indices step 2) {
-        if (i + 1 == genomes.size) {
-            output += genomes[i].clone()
-        } else {
-            val childrenInstance = genomes[i].modularCrossover(genomes[i + 1])
-            output += childrenInstance.first
-            output += childrenInstance.second
-        }
     }
     return output
 }

@@ -14,8 +14,6 @@ open class Genome(protected val parameters: MutableMap<Parameter, Double>, val p
         }
     }
 
-    fun getRawParameters() = parameters.toMutableMap()
-
     fun getParameter(parameter: Parameter) =
         (parameters[parameter]!! * (parameter.restriction2 - parameter.restriction1)) + parameter.restriction1
 

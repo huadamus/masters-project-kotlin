@@ -1,14 +1,13 @@
 package metaheuristic
 
 import GENERATIONS
-import model.CombinedGenome
-import simulation.SimulationOutcome
-import simulation.SingularSimulationOutcome
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import model.Date
+import model.OffensiveGenome
+import simulation.GenomeGenerator
 import simulation.Simulator
 import java.util.*
 
@@ -51,15 +50,13 @@ class GenericGeneticAlgorithm(
             val generation = calculatePopulationFitness(population)
             println("$logString, Run ${runId + 1}, Generation ${i + 1}/$GENERATIONS, archive size: ${archive.size}")
             archive += generation
-            archive = paretoEvaluate(archive.toList())
-                .map { it as SingularSimulationOutcome }
-                .toMutableSet()
-            val newPopulation = mutableListOf<CombinedGenome>()
+            archive = paretoEvaluateOffensiveGenomes(archive.toList()).toMutableSet()
+            val newPopulation = mutableListOf<OffensiveGenome>()
             population = when (selectionMethod) {
-                SelectionMethod.HV_PARETO -> (newPopulation + getNewGenerationCombinedGenomes(generation))
+                SelectionMethod.HV_PARETO -> (newPopulation + getNewGenerationOffensiveGenomesByRankAndVolume(generation))
                     .toMutableList()
                     .shuffled()
-                SelectionMethod.NSGA_II -> (newPopulation + getNewGenerationCombinedGenomesByRankAndVolume(generation))
+                SelectionMethod.NSGA_II -> (newPopulation + getNewGenerationOffensiveGenomesByRankAndVolume(generation))
                     .toMutableList()
                     .shuffled()
             }
@@ -68,20 +65,20 @@ class GenericGeneticAlgorithm(
     }
 
     @Suppress("UNCHECKED_CAST")
-    override fun calculateFinalPopulationFitness(genomes: Any): List<SimulationOutcome> {
-        return calculateFinalPopulationFitness(genomes as List<CombinedGenome>)
+    override fun calculateFinalPopulationFitness(genomes: Any): List<OffensiveGenome> {
+        return calculateFinalPopulationFitness(genomes as List<OffensiveGenome>)
     }
 
     private fun calculateFinalPopulationFitness(
-        genomes: List<CombinedGenome>,
-    ): List<SingularSimulationOutcome> {
+        genomes: List<OffensiveGenome>,
+    ): List<OffensiveGenome> {
         return calculatePopulationFitness(genomes)
     }
 
     private fun calculatePopulationFitness(
-        genomes: List<CombinedGenome>,
-    ): List<SingularSimulationOutcome> {
-        lateinit var genomesWithScores: List<SingularSimulationOutcome>
+        genomes: List<OffensiveGenome>,
+    ): List<OffensiveGenome> {
+        lateinit var genomesWithScores: List<OffensiveGenome>
         runBlocking {
             genomesWithScores = calculateFitness(genomes)
         }
@@ -89,14 +86,13 @@ class GenericGeneticAlgorithm(
     }
 
     private suspend fun calculateFitness(
-        genomes: List<CombinedGenome>,
-    ): List<SingularSimulationOutcome> {
-        val output = Collections.synchronizedList(mutableListOf<SingularSimulationOutcome>())
+        genomes: List<OffensiveGenome>,
+    ): List<OffensiveGenome> {
+        val output = Collections.synchronizedList(mutableListOf<OffensiveGenome>())
         withContext(Dispatchers.Default) {
             for (i in genomes.indices) {
                 launch {
-                    val score = Simulator.getCombinedScoreForDoubleGenome(
-                        genomes[i].offensiveGenome,
+                    val score = Simulator.getScoreForOffensiveGenome(
                         genomes[i],
                         selling,
                         periods,
@@ -107,15 +103,18 @@ class GenericGeneticAlgorithm(
                         shillerPESP500Data,
                         dowToGoldData
                     )
-                    val outcome = SingularSimulationOutcome(score.profits, score.risk)
-                    outcome.genome = genomes[i]
-                    output += outcome
+                    output += score
                 }
             }
         }
         return output
     }
 
-    override fun getEmptyState() =
-        GenericGeneticAlgorithmState(initializeCombinedGenomes(periodLengthInMonths), mutableSetOf())
+    override fun getEmptyState(): GenericGeneticAlgorithmState {
+        val genomes = initializeOffensiveGenomes(periodLengthInMonths)
+        for (genome in genomes) {
+            genome.bestDefensiveGenome = GenomeGenerator.generateDefensiveGenome(periodLengthInMonths)
+        }
+        return GenericGeneticAlgorithmState(genomes, mutableSetOf())
+    }
 }

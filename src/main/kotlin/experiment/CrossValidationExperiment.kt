@@ -1,10 +1,8 @@
 package experiment
 
-import simulation.CombinedSimulationOutcome
 import simulation.Runner
 import simulation.SimulationOutcome
 import simulation.Simulator
-import simulation.SingularSimulationOutcome
 import RUNS
 import TESTING_PERIODS
 import data.DataLoader
@@ -20,7 +18,7 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
 
     private val finalTestPeriods = mutableListOf<List<Pair<Date, Date>>>()
     private val geneticAlgorithms = mutableListOf<GeneticAlgorithm>()
-    private val validationOutcomes = mutableListOf<List<SingularSimulationOutcome>>()
+    private val validationOutcomes = mutableListOf<List<SimulationOutcome>>()
 
     override fun run() {
         geneticAlgorithms.clear()
@@ -55,7 +53,7 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
     override fun calculateAndPrintOutcomes(): List<List<SimulationOutcome>> {
         println("=====CROSS-VALIDATION=====")
         finalTestPeriods.clear()
-        val iterationOutcomes = mutableListOf<List<SingularSimulationOutcome>>()
+        val iterationOutcomes = mutableListOf<List<SimulationOutcome>>()
         val tested = mutableListOf<List<OffensiveGenome>>()
         for (i in 0 until dataset.third.size / dataset.second) {
             val state = loadState(i)
@@ -109,12 +107,17 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
             )
 
             val testedIteration = tester.test(state.archive.toList())
-            tested += testedIteration.map { it.first }
-            iterationOutcomes.add(testedIteration.map { it.second } as List<SingularSimulationOutcome>)
-            iterationOutcomes.add(listOf(SingularSimulationOutcome(buyAndHoldScore.first, buyAndHoldScore.second)))
+            tested += testedIteration
+            iterationOutcomes.add(testedIteration.map {
+                SimulationOutcome(
+                    it.profitsWithDefensiveGenome!!,
+                    it.riskWithDefensiveGenome!!
+                )
+            })
+            iterationOutcomes.add(listOf(SimulationOutcome(buyAndHoldScore.first, buyAndHoldScore.second)))
             iterationOutcomes.add(
                 listOf(
-                    SingularSimulationOutcome(
+                    SimulationOutcome(
                         activeManagementScore.first,
                         activeManagementScore.second
                     )
@@ -127,7 +130,7 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
             println("${finalTestPeriods[i]} genomes:")
             println(
                 OutputPrintingManager.getReadableParametersForCombined(
-                    iterationOutcomes[i * 3] as List<CombinedSimulationOutcome>
+                    iterationOutcomes[i * 3] as List<OffensiveGenome>
                 )
             )
             println(
@@ -146,7 +149,7 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
 
     private fun showValidationOutcome(archive: List<List<OffensiveGenome>>) {
         println("=====18 TO 21=====")
-        val iterationOutcomes = mutableListOf<List<SingularSimulationOutcome>>()
+        val iterationOutcomes = mutableListOf<List<SimulationOutcome>>()
 
         val buyAndHoldScore = Simulator.getScoreForBuyAndHold(
             Pair(Date(1, 1, 2018), Date(1, 1, 2021)),
@@ -167,10 +170,10 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
             DataLoader.loadShillerPESP500Ratio(),
         )
 
-        iterationOutcomes.add(listOf(SingularSimulationOutcome(buyAndHoldScore.first, buyAndHoldScore.second)))
+        iterationOutcomes.add(listOf(SimulationOutcome(buyAndHoldScore.first, buyAndHoldScore.second)))
         iterationOutcomes.add(
             listOf(
-                SingularSimulationOutcome(
+                SimulationOutcome(
                     activeManagementScore.first,
                     activeManagementScore.second
                 )
@@ -194,7 +197,12 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
                 DataLoader.loadShillerPESP500Ratio(),
                 DataLoader.loadDowToGoldData()
             )
-            iterationOutcomes += tester.test(archive[i].toList()).map { it.second } as List<SingularSimulationOutcome>
+            iterationOutcomes += tester.test(archive[i].toList()).map {
+                SimulationOutcome(
+                    it.profitsWithDefensiveGenome!!,
+                    it.riskWithDefensiveGenome!!
+                )
+            }
         }
 
         println("Buy-and-hold score: ${iterationOutcomes[0]}")
@@ -204,7 +212,7 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
             println("Iteration ${i - 1} genomes:")
             println(
                 OutputPrintingManager.getReadableParametersForCombined(
-                    iterationOutcomes[i] as List<CombinedSimulationOutcome>
+                    iterationOutcomes[i] as List<OffensiveGenome>
                 )
             )
         }

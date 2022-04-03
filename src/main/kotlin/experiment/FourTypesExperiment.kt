@@ -1,14 +1,12 @@
 package experiment
-import java.util.*
 
-import simulation.Runner
 import RUNS
 import data.DataLoader
+import metaheuristic.*
 import model.Date
 import output.FourTypesChartDrawer
+import simulation.Runner
 import simulation.SimulationOutcome
-import simulation.SingularSimulationOutcome
-import metaheuristic.*
 
 class FourTypesExperiment : Experiment("four_types") {
 
@@ -90,7 +88,7 @@ class FourTypesExperiment : Experiment("four_types") {
     }
 
     @Suppress("UNCHECKED_CAST")
-    override fun calculateAndPrintOutcomes(): List<List<SingularSimulationOutcome>> {
+    override fun calculateAndPrintOutcomes(): List<List<SimulationOutcome>> {
         val state = loadState()
         val geneticAlgorithmOutcomeHv = state[0] as GenericGeneticAlgorithmState
         val geneticAlgorithmOutcomeNsga = state[1] as GenericGeneticAlgorithmState
@@ -100,25 +98,36 @@ class FourTypesExperiment : Experiment("four_types") {
         val outcomes = mutableListOf(
             geneticAlgorithmOutcomeHv.archive.toList(),
             geneticAlgorithmOutcomeNsga.archive.toList(),
-            coevolutionGeneticAlgorithmOutcomeHv.archive.map {
-                val output = SingularSimulationOutcome(it.profitsWithDefensiveGenome!!, it.riskWithDefensiveGenome!!)
-                output
-            }.toList(),
-            coevolutionGeneticAlgorithmOutcomeNsga.archive.map {
-                val output = SingularSimulationOutcome(it.profitsWithDefensiveGenome!!, it.riskWithDefensiveGenome!!)
-                output
-            }.toList(),
+            coevolutionGeneticAlgorithmOutcomeHv.archive.toList(),
+            coevolutionGeneticAlgorithmOutcomeNsga.archive.toList()
         )
 
         val purityValues = mutableListOf<Double>()
         val mainFront = outcomes[0] + outcomes[1] + outcomes[2] + outcomes[3]
-        val evaluatedMainFront = paretoEvaluate(mainFront) as List<SingularSimulationOutcome>
+        val evaluatedMainFront = paretoEvaluateOffensiveGenomes(mainFront).map {
+            SimulationOutcome(
+                it.profitsWithDefensiveGenome!!,
+                it.riskWithDefensiveGenome!!
+            )
+        }
         for (i in 0 until 4) {
-            purityValues += calculateParetoPurity(outcomes[i], evaluatedMainFront)
+            purityValues += calculateParetoPurity(outcomes[i].map {
+                SimulationOutcome(
+                    it.profitsWithDefensiveGenome!!,
+                    it.riskWithDefensiveGenome!!
+                )
+            }, evaluatedMainFront)
         }
         this.purityValues = purityValues
 
-        return outcomes
+        return outcomes.map { it ->
+            it.map { offensiveGenome ->
+                SimulationOutcome(
+                    offensiveGenome.profitsWithDefensiveGenome!!,
+                    offensiveGenome.riskWithDefensiveGenome!!
+                )
+            }
+        }
     }
 
     override fun drawChart(outcomes: List<List<SimulationOutcome>>) {

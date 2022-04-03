@@ -11,9 +11,8 @@ import model.StrategyDetails
 
 object Simulator {
 
-    fun getCombinedScoreForDoubleGenome(
+    fun getScoreForOffensiveGenome(
         offensiveGenome: OffensiveGenome,
-        defensiveGenome: Genome,
         selling: Boolean,
         periods: List<Pair<Date, Date>>,
         developedData: Map<Date, Double>,
@@ -22,10 +21,10 @@ object Simulator {
         goldUsdData: Map<Date, Double>,
         shillerPESp500Data: Map<Date, Double>,
         dowToGoldData: Map<Date, Double>,
-    ): CombinedSimulationOutcome {
+    ): OffensiveGenome {
         val calculationsOutcome = calculateScoreForDoubleGenome(
             offensiveGenome,
-            defensiveGenome,
+            offensiveGenome.bestDefensiveGenome!!,
             selling,
             periods,
             developedData,
@@ -36,13 +35,12 @@ object Simulator {
             dowToGoldData
         )
         calculationsOutcome.let {
-            return CombinedSimulationOutcome(
-                it.offensiveGenome,
-                it.defensiveGenome,
-                it.profits,
-                it.risk,
-                it.strategyDetails
-            )
+            val output = offensiveGenome.clone()
+            output.bestDefensiveGenome = offensiveGenome.bestDefensiveGenome!!.clone()
+            output.profitsWithDefensiveGenome = it.profits
+            output.riskWithDefensiveGenome = it.risk
+            output.strategyDetailsWithDefensiveGenome = it.strategyDetails
+            return output
         }
     }
 

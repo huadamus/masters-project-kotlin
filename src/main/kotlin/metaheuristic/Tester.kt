@@ -2,7 +2,6 @@
 
 package metaheuristic
 
-import simulation.SimulationOutcome
 import model.Date
 import model.OffensiveGenome
 import simulation.Simulator
@@ -18,12 +17,11 @@ class Tester(
     private val dowToGoldData: Map<Date, Double>,
 ) {
 
-    fun test(initialSimulationOutcomes: List<OffensiveGenome>): List<Pair<OffensiveGenome, SimulationOutcome>> {
-        val output = mutableListOf<Pair<OffensiveGenome, SimulationOutcome>>()
+    fun test(initialSimulationOutcomes: List<OffensiveGenome>): List<OffensiveGenome> {
+        val output = mutableListOf<OffensiveGenome>()
         for (initialSimulationOutcome in initialSimulationOutcomes) {
-            val testedSimulationOutcome = Simulator.getCombinedScoreForDoubleGenome(
+            val testedSimulationOutcome = Simulator.getScoreForOffensiveGenome(
                 initialSimulationOutcome.clone(),
-                initialSimulationOutcome.bestDefensiveGenome!!.clone(),
                 selling,
                 periods,
                 developedData,
@@ -33,9 +31,9 @@ class Tester(
                 shillerPESP500Data,
                 dowToGoldData
             )
-            output += Pair(initialSimulationOutcome.clone(), testedSimulationOutcome)
+            output += testedSimulationOutcome
         }
-        val tested = paretoEvaluate(output.map { it.second })
-        return output.filter { it.second in tested }.sortedByDescending { it.second.profits }
+        val tested = paretoEvaluateOffensiveGenomes(output)
+        return tested.sortedByDescending { it.profitsWithDefensiveGenome!! }
     }
 }

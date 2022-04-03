@@ -1,6 +1,5 @@
 package simulation
 
-import model.CombinedGenome
 import model.Genome
 import model.OffensiveGenome
 import model.Parameter
@@ -20,19 +19,6 @@ object GenomeGenerator {
             getRandomChoiceParameter(),
             getRandomParameters(),
             periodMonths
-        )
-    }
-
-    fun generateCombinedGenome(periodMonths: Int): CombinedGenome {
-        return CombinedGenome(
-            OffensiveGenome(
-                getRandomChoiceParameter(),
-                getRandomParameters(),
-                periodMonths
-            ),
-            Genome(
-                getRandomParameters(), periodMonths
-            )
         )
     }
 

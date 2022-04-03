@@ -1,9 +1,8 @@
 package output
 
+import model.OffensiveGenome
 import model.Parameter
-import simulation.CombinedSimulationOutcome
 import simulation.SimulationOutcome
-import simulation.SingularSimulationOutcome
 
 object OutputPrintingManager {
 
@@ -24,7 +23,7 @@ object OutputPrintingManager {
         return output
     }
 
-    fun getReadableParametersForSingular(outcomes: List<SingularSimulationOutcome>): String {
+    fun getReadableParametersForSingular(outcomes: List<SimulationOutcome>): String {
         val sortedOutcomes = outcomes.sortedByDescending { it.getHvValue() }
         var output = ""
         for (i in sortedOutcomes.indices) {
@@ -40,29 +39,29 @@ object OutputPrintingManager {
         return output
     }
 
-    fun getReadableParametersForCombined(outcomes: List<CombinedSimulationOutcome>): String {
+    fun getReadableParametersForCombined(outcomes: List<OffensiveGenome>): String {
         val sortedOutcomes = outcomes.sortedByDescending { it.getHvValue() }
         var output = ""
         for (i in sortedOutcomes.indices) {
             output += "Solution ${i + 1}/${sortedOutcomes.size}" + System.lineSeparator()
             output += "Offensive genome:" + System.lineSeparator()
-            output += "Hashcode = " + sortedOutcomes[i].offensiveGenome.hashCode() + System.lineSeparator()
-            output += "Choice parameter = " + sortedOutcomes[i].offensiveGenome.getChoiceParameter().round() +
+            output += "Hashcode = " + sortedOutcomes[i].hashCode() + System.lineSeparator()
+            output += "Choice parameter = " + sortedOutcomes[i].getChoiceParameter().round() +
                     System.lineSeparator()
             for (parameter in Parameter.values()) {
                 output += "$parameter = ${
-                    sortedOutcomes[i].offensiveGenome.getParameter(parameter).round()
+                    sortedOutcomes[i].getParameter(parameter).round()
                 }" + System.lineSeparator()
             }
             output += "Defensive genome:" + System.lineSeparator()
-            output += "Hashcode = " + sortedOutcomes[i].defensiveGenome.hashCode() + System.lineSeparator()
+            output += "Hashcode = " + sortedOutcomes[i].bestDefensiveGenome.hashCode() + System.lineSeparator()
             for (parameter in Parameter.values()) {
                 output += "$parameter = ${
-                    sortedOutcomes[i].defensiveGenome.getParameter(parameter).round()
+                    sortedOutcomes[i].bestDefensiveGenome!!.getParameter(parameter).round()
                 }" + System.lineSeparator()
             }
             output += "Strategy details:" + System.lineSeparator()
-            for (strategyDetails in sortedOutcomes[i].strategyDetails.withIndex()) {
+            for (strategyDetails in sortedOutcomes[i].strategyDetailsWithDefensiveGenome!!.withIndex()) {
                 output += "Strategy details ${strategyDetails.index + 1}: ${strategyDetails.value}" + System.lineSeparator()
             }
             output += System.lineSeparator()

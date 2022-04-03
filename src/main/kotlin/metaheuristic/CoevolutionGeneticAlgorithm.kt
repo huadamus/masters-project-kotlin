@@ -4,9 +4,7 @@ import ELITISM
 import GENERATIONS
 import model.Genome
 import model.OffensiveGenome
-import simulation.CombinedSimulationOutcome
 import simulation.SimulationOutcome
-import simulation.SingularSimulationOutcome
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -62,7 +60,7 @@ class CoevolutionGeneticAlgorithm(
             )
             if (bestLastDefensiveGenome == null) {
                 bestLastDefensiveGenome = (matchWithRandomOutcomes + matchWithRandomOutcomes2)
-                    .maxByOrNull { it.getHvValue() }!!.defensiveGenome.clone()
+                    .maxByOrNull { it.getHvValue() }!!.bestDefensiveGenome!!.clone()
             }
             val matchWithBestOutcomes = calculateFinalPopulationFitness(
                 getCombinedBestGenomes(offensiveGenomesPopulation, bestLastDefensiveGenome)
@@ -71,63 +69,60 @@ class CoevolutionGeneticAlgorithm(
             val assignedOffensivePopulation = offensiveGenomesPopulation.map { it.clone() }
             when (selectionMethod) {
                 SelectionMethod.HV_PARETO -> for (offensiveGenome in assignedOffensivePopulation) {
-                    val randomOutcomeSolution = matchWithRandomOutcomes.first { it.offensiveGenome == offensiveGenome }
+                    val randomOutcomeSolution = matchWithRandomOutcomes.first { it.isSame(offensiveGenome) }
                     val randomOutcomeSolution2 =
-                        matchWithRandomOutcomes2.first { it.offensiveGenome == offensiveGenome }
-                    val bestOutcomeSolution = matchWithBestOutcomes.first { it.offensiveGenome == offensiveGenome }
+                        matchWithRandomOutcomes2.first { it.isSame(offensiveGenome) }
+                    val bestOutcomeSolution = matchWithBestOutcomes.first { it.isSame(offensiveGenome) }
                     if (randomOutcomeSolution.getHvValue() > offensiveGenome.getHvValue()) {
-                        offensiveGenome.bestDefensiveGenome = randomOutcomeSolution.defensiveGenome.clone()
-                        offensiveGenome.profitsWithDefensiveGenome = randomOutcomeSolution.profits
-                        offensiveGenome.riskWithDefensiveGenome = randomOutcomeSolution.risk
-                        offensiveGenome.strategyDetailsWithDefensiveGenome = randomOutcomeSolution.strategyDetails
+                        offensiveGenome.bestDefensiveGenome = randomOutcomeSolution.bestDefensiveGenome!!.clone()
+                        offensiveGenome.profitsWithDefensiveGenome = randomOutcomeSolution.profitsWithDefensiveGenome
+                        offensiveGenome.riskWithDefensiveGenome = randomOutcomeSolution.riskWithDefensiveGenome
+                        offensiveGenome.strategyDetailsWithDefensiveGenome =
+                            randomOutcomeSolution.strategyDetailsWithDefensiveGenome
                     }
                     if (randomOutcomeSolution2.getHvValue() > offensiveGenome.getHvValue()) {
-                        offensiveGenome.bestDefensiveGenome = randomOutcomeSolution2.defensiveGenome.clone()
-                        offensiveGenome.profitsWithDefensiveGenome = randomOutcomeSolution2.profits
-                        offensiveGenome.riskWithDefensiveGenome = randomOutcomeSolution2.risk
-                        offensiveGenome.strategyDetailsWithDefensiveGenome = randomOutcomeSolution2.strategyDetails
+                        offensiveGenome.bestDefensiveGenome = randomOutcomeSolution2.bestDefensiveGenome!!.clone()
+                        offensiveGenome.profitsWithDefensiveGenome = randomOutcomeSolution2.profitsWithDefensiveGenome
+                        offensiveGenome.riskWithDefensiveGenome = randomOutcomeSolution2.riskWithDefensiveGenome
+                        offensiveGenome.strategyDetailsWithDefensiveGenome =
+                            randomOutcomeSolution2.strategyDetailsWithDefensiveGenome
                     }
                     if (bestOutcomeSolution.getHvValue() > offensiveGenome.getHvValue()) {
-                        offensiveGenome.bestDefensiveGenome = bestOutcomeSolution.defensiveGenome.clone()
-                        offensiveGenome.profitsWithDefensiveGenome = bestOutcomeSolution.profits
-                        offensiveGenome.riskWithDefensiveGenome = bestOutcomeSolution.risk
-                        offensiveGenome.strategyDetailsWithDefensiveGenome = bestOutcomeSolution.strategyDetails
+                        offensiveGenome.bestDefensiveGenome = bestOutcomeSolution.bestDefensiveGenome!!.clone()
+                        offensiveGenome.profitsWithDefensiveGenome = bestOutcomeSolution.profitsWithDefensiveGenome
+                        offensiveGenome.riskWithDefensiveGenome = bestOutcomeSolution.riskWithDefensiveGenome
+                        offensiveGenome.strategyDetailsWithDefensiveGenome =
+                            bestOutcomeSolution.strategyDetailsWithDefensiveGenome
                     }
                 }
                 SelectionMethod.NSGA_II -> for (offensiveGenome in assignedOffensivePopulation) {
-                    val randomOutcomeSolution = matchWithRandomOutcomes.first { it.offensiveGenome == offensiveGenome }
+                    val randomOutcomeSolution = matchWithRandomOutcomes.first { it.isSame(offensiveGenome) }
                     val randomOutcomeSolution2 =
-                        matchWithRandomOutcomes2.first { it.offensiveGenome == offensiveGenome }
-                    val bestOutcomeSolution = matchWithBestOutcomes.first { it.offensiveGenome == offensiveGenome }
-                    val bestSolutions = paretoEvaluate(
+                        matchWithRandomOutcomes2.first { it.isSame(offensiveGenome) }
+                    val bestOutcomeSolution = matchWithBestOutcomes.first { it.isSame(offensiveGenome) }
+                    val bestSolutions = paretoEvaluateOffensiveGenomes(
                         listOf(
                             randomOutcomeSolution,
                             randomOutcomeSolution2,
                             bestOutcomeSolution,
                         )
-                    ).toMutableList() as MutableList<CombinedSimulationOutcome>
+                    ).toMutableList()
                     if (offensiveGenome.profitsWithDefensiveGenome != null) {
-                        bestSolutions += CombinedSimulationOutcome(
-                            offensiveGenome,
-                            offensiveGenome.bestDefensiveGenome!!,
-                            offensiveGenome.profitsWithDefensiveGenome!!,
-                            offensiveGenome.riskWithDefensiveGenome!!,
-                            offensiveGenome.strategyDetailsWithDefensiveGenome!!
-                        )
+                        bestSolutions += offensiveGenome.clone()
                     }
                     val randomBest = bestSolutions.random()
-                    offensiveGenome.profitsWithDefensiveGenome = randomBest.profits
-                    offensiveGenome.riskWithDefensiveGenome = randomBest.risk
-                    offensiveGenome.bestDefensiveGenome = randomBest.defensiveGenome
-                    offensiveGenome.strategyDetailsWithDefensiveGenome = randomBest.strategyDetails
+                    offensiveGenome.profitsWithDefensiveGenome = randomBest.profitsWithDefensiveGenome
+                    offensiveGenome.riskWithDefensiveGenome = randomBest.riskWithDefensiveGenome
+                    offensiveGenome.bestDefensiveGenome = randomBest.bestDefensiveGenome!!.clone()
+                    offensiveGenome.strategyDetailsWithDefensiveGenome = randomBest.strategyDetailsWithDefensiveGenome
                 }
             }
 
             val defensiveOutcomes = assignedOffensivePopulation.map {
-                val singularSimulationOutcome =
-                    SingularSimulationOutcome(it.profitsWithDefensiveGenome!!, it.riskWithDefensiveGenome!!)
-                singularSimulationOutcome.genome = it.bestDefensiveGenome!!.clone()
-                singularSimulationOutcome
+                val simulationOutcome =
+                    SimulationOutcome(it.profitsWithDefensiveGenome!!, it.riskWithDefensiveGenome!!)
+                simulationOutcome.genome = it.bestDefensiveGenome!!.clone()
+                simulationOutcome
             }
             val bestDefensiveOutcome = defensiveOutcomes.maxByOrNull { it.getHvValue() }
             bestLastDefensiveGenome = bestDefensiveOutcome!!.genome.clone()
@@ -173,15 +168,15 @@ class CoevolutionGeneticAlgorithm(
         return CoevolutionGeneticAlgorithmState(offensiveGenomesPopulation, defensiveGenomesPopulation, archive)
     }
 
-    override fun calculateFinalPopulationFitness(genomes: Any): List<SimulationOutcome> {
+    override fun calculateFinalPopulationFitness(genomes: Any): List<OffensiveGenome> {
         @Suppress("UNCHECKED_CAST")
-        return calculateFinalPopulationFitness(genomes as List<Pair<OffensiveGenome, Genome>>)
+        return calculateFinalPopulationFitness(genomes as List<OffensiveGenome>)
     }
 
     private fun calculateFinalPopulationFitness(
-        combinedGenomes: List<Pair<OffensiveGenome, Genome>>,
-    ): List<CombinedSimulationOutcome> {
-        lateinit var genomesWithScores: List<CombinedSimulationOutcome>
+        combinedGenomes: List<OffensiveGenome>,
+    ): List<OffensiveGenome> {
+        lateinit var genomesWithScores: List<OffensiveGenome>
         runBlocking {
             genomesWithScores = calculateFitness(combinedGenomes)
         }
@@ -189,15 +184,14 @@ class CoevolutionGeneticAlgorithm(
     }
 
     private suspend fun calculateFitness(
-        combinedGenomes: List<Pair<OffensiveGenome, Genome>>,
-    ): List<CombinedSimulationOutcome> {
-        val output = Collections.synchronizedList(mutableListOf<CombinedSimulationOutcome>())
+        combinedGenomes: List<OffensiveGenome>,
+    ): List<OffensiveGenome> {
+        val output = Collections.synchronizedList(mutableListOf<OffensiveGenome>())
         withContext(Dispatchers.Default) {
             for (i in combinedGenomes.indices) {
                 launch {
-                    output += Simulator.getCombinedScoreForDoubleGenome(
-                        combinedGenomes[i].first,
-                        combinedGenomes[i].second,
+                    output += Simulator.getScoreForOffensiveGenome(
+                        combinedGenomes[i],
                         selling,
                         periods,
                         developedData,
@@ -216,17 +210,23 @@ class CoevolutionGeneticAlgorithm(
     private fun getCombinedRandomGenomes(
         offensiveGenomes: List<OffensiveGenome>,
         defensiveGenomes: List<Genome>,
-    ): List<Pair<OffensiveGenome, Genome>> {
+    ): List<OffensiveGenome> {
         val shuffledDefensiveGenomes = defensiveGenomes.shuffled().toMutableList()
         return offensiveGenomes.map {
-            Pair(it.clone(), shuffledDefensiveGenomes.removeFirst().clone())
+            val out = it.clone()
+            out.bestDefensiveGenome = shuffledDefensiveGenomes.removeFirst().clone()
+            out
         }
     }
 
     private fun getCombinedBestGenomes(
         offensiveGenomes: List<OffensiveGenome>,
         bestDefensiveGenome: Genome,
-    ) = offensiveGenomes.map { Pair(it.clone(), bestDefensiveGenome.clone()) }
+    ) = offensiveGenomes.map {
+        val out = it.clone()
+        out.bestDefensiveGenome = bestDefensiveGenome.clone()
+        out
+    }
 
     override fun getEmptyState(): CoevolutionGeneticAlgorithmState {
         return CoevolutionGeneticAlgorithmState(

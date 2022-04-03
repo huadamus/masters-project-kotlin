@@ -2,7 +2,6 @@ package model
 
 import CROSSOVER_CHANCE
 import MUTATION_CHANCE
-import simulation.SingularSimulationOutcome
 import simulation.hvParetoFitnessFunction
 import kotlin.random.Random
 
@@ -15,12 +14,6 @@ class OffensiveGenome(
     var profitsWithDefensiveGenome: Double? = null
     var riskWithDefensiveGenome: Double? = null
     var strategyDetailsWithDefensiveGenome: List<StrategyDetails>? = null
-
-    fun toSingularSimulationOutcome(): SingularSimulationOutcome {
-        val output = SingularSimulationOutcome(profitsWithDefensiveGenome!!, riskWithDefensiveGenome!!)
-        output.genome = clone()
-        return output
-    }
 
     fun getHvValue(): Double {
         return if (profitsWithDefensiveGenome == null || riskWithDefensiveGenome == null) {
@@ -180,6 +173,21 @@ class OffensiveGenome(
         result = 11 * result + (riskWithDefensiveGenome?.hashCode() ?: 0)
         result = 17 * result + (strategyDetailsWithDefensiveGenome?.hashCode() ?: 0)
         return result
+    }
+
+    fun isSame(offensiveGenome: OffensiveGenome): Boolean {
+        if (choiceParameter != offensiveGenome.choiceParameter) {
+            return false
+        }
+        if (periodMonths != offensiveGenome.periodMonths) {
+            return false
+        }
+        for (parameter in parameters) {
+            if (parameter.value != offensiveGenome.parameters[parameter.key]) {
+                return false
+            }
+        }
+        return true
     }
 
     companion object {

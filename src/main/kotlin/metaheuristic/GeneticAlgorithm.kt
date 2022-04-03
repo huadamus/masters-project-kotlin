@@ -1,6 +1,5 @@
 package metaheuristic
 
-import simulation.SimulationOutcome
 import model.Date
 
 abstract class GeneticAlgorithm(
@@ -18,7 +17,7 @@ abstract class GeneticAlgorithm(
 
     abstract fun execute(runId: Int, geneticAlgorithmState: GeneticAlgorithmState): GeneticAlgorithmState
 
-    abstract fun calculateFinalPopulationFitness(genomes: Any): List<SimulationOutcome>
+    abstract fun calculateFinalPopulationFitness(genomes: Any): List<Any>
 
     abstract fun getEmptyState(): GeneticAlgorithmState
 }

@@ -3,7 +3,7 @@ package simulation.portfolio
 import simulation.HistoricalDataStore
 import model.Date
 
-abstract class Portfolio(protected val startDate: Date) {
+abstract class Portfolio(private val startDate: Date) {
     protected lateinit var historicalDataStore: HistoricalDataStore
     protected val assets = mutableSetOf<Asset>()
     private var monthlyBalanceProportionValues = mutableListOf<Double>()

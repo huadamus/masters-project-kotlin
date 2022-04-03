@@ -1,7 +1,6 @@
 package metaheuristic
 
-import model.CombinedGenome
-import simulation.SingularSimulationOutcome
+import model.OffensiveGenome
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.ObjectInputStream
@@ -10,8 +9,8 @@ import java.io.ObjectOutputStream
 
 @Suppress("UNCHECKED_CAST")
 data class GenericGeneticAlgorithmState(
-    val population: List<CombinedGenome>,
-    val archive: Set<SingularSimulationOutcome>,
+    val population: List<OffensiveGenome>,
+    val archive: Set<OffensiveGenome>,
 ) : GeneticAlgorithmState {
 
     fun save(experimentName: String) {
@@ -25,8 +24,8 @@ data class GenericGeneticAlgorithmState(
 
     override fun combineArchiveWith(geneticAlgorithmState: GeneticAlgorithmState): GenericGeneticAlgorithmState {
         val genericGeneticAlgorithmState = geneticAlgorithmState as GenericGeneticAlgorithmState
-        val combinedArchive = paretoEvaluate(archive.toList() + genericGeneticAlgorithmState.archive)
-        return GenericGeneticAlgorithmState(population, combinedArchive.toSet() as Set<SingularSimulationOutcome>)
+        val combinedArchive = paretoEvaluateOffensiveGenomes(archive.toList() + genericGeneticAlgorithmState.archive)
+        return GenericGeneticAlgorithmState(population, combinedArchive.toSet())
     }
 
     companion object {
@@ -38,8 +37,8 @@ data class GenericGeneticAlgorithmState(
             try {
                 val streamIn = FileInputStream(PATH + experimentName + PATH_ADDENDUM)
                 val objectInputStream = ObjectInputStream(streamIn)
-                val population = objectInputStream.readObject() as List<CombinedGenome>
-                val archive = objectInputStream.readObject() as Set<SingularSimulationOutcome>
+                val population = objectInputStream.readObject() as List<OffensiveGenome>
+                val archive = objectInputStream.readObject() as Set<OffensiveGenome>
                 output = GenericGeneticAlgorithmState(population, archive)
                 objectInputStream.close()
             } catch (e: Exception) {
