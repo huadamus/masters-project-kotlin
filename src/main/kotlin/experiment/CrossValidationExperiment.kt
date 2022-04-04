@@ -109,10 +109,12 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
             val testedIteration = tester.test(state.archive.toList())
             tested += testedIteration
             iterationOutcomes.add(testedIteration.map {
-                SimulationOutcome(
+                val out = SimulationOutcome(
                     it.profitsWithDefensiveGenome!!,
                     it.riskWithDefensiveGenome!!
                 )
+                out.genome = it
+                out
             })
             iterationOutcomes.add(listOf(SimulationOutcome(buyAndHoldScore.first, buyAndHoldScore.second)))
             iterationOutcomes.add(
@@ -129,9 +131,7 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
             println()
             println("${finalTestPeriods[i]} genomes:")
             println(
-                OutputPrintingManager.getReadableParametersForCombined(
-                    iterationOutcomes[i * 3] as List<OffensiveGenome>
-                )
+                OutputPrintingManager.getReadableParameters(iterationOutcomes[i * 3])
             )
             println(
                 "${finalTestPeriods[i]} scores: ${System.lineSeparator()}${
@@ -198,10 +198,12 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
                 DataLoader.loadDowToGoldData()
             )
             iterationOutcomes += tester.test(archive[i].toList()).map {
-                SimulationOutcome(
+                val output = SimulationOutcome(
                     it.profitsWithDefensiveGenome!!,
                     it.riskWithDefensiveGenome!!
                 )
+                output.genome = it
+                output
             }
         }
 
@@ -210,11 +212,7 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
         for (i in 2 until 2 + dataset.third.size / dataset.second) {
             println("Iteration ${i - 1}: ${iterationOutcomes[i]}")
             println("Iteration ${i - 1} genomes:")
-            println(
-                OutputPrintingManager.getReadableParametersForCombined(
-                    iterationOutcomes[i] as List<OffensiveGenome>
-                )
-            )
+            println(OutputPrintingManager.getReadableParameters(iterationOutcomes[i]))
         }
 
         validationOutcomes.clear()

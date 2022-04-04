@@ -23,45 +23,30 @@ object OutputPrintingManager {
         return output
     }
 
-    fun getReadableParametersForSingular(outcomes: List<SimulationOutcome>): String {
+    fun getReadableParameters(outcomes: List<SimulationOutcome>): String {
         val sortedOutcomes = outcomes.sortedByDescending { it.getHvValue() }
-        var output = ""
-        for (i in sortedOutcomes.indices) {
-            output += "Solution ${i + 1}/${sortedOutcomes.size}" + System.lineSeparator()
-            output += "Genome:" + System.lineSeparator()
-            for (parameter in Parameter.values()) {
-                output += "$parameter = ${
-                    sortedOutcomes[i].genome.getParameter(parameter)
-                }" + System.lineSeparator()
-            }
-            output += System.lineSeparator()
-        }
-        return output
-    }
-
-    fun getReadableParametersForCombined(outcomes: List<OffensiveGenome>): String {
-        val sortedOutcomes = outcomes.sortedByDescending { it.getHvValue() }
+        val offensiveGenomes = sortedOutcomes.map { it.genome as OffensiveGenome }
         var output = ""
         for (i in sortedOutcomes.indices) {
             output += "Solution ${i + 1}/${sortedOutcomes.size}" + System.lineSeparator()
             output += "Offensive genome:" + System.lineSeparator()
             output += "Hashcode = " + sortedOutcomes[i].hashCode() + System.lineSeparator()
-            output += "Choice parameter = " + sortedOutcomes[i].getChoiceParameter().round() +
+            output += "Choice parameter = " + offensiveGenomes[i].getChoiceParameter().round() +
                     System.lineSeparator()
             for (parameter in Parameter.values()) {
                 output += "$parameter = ${
-                    sortedOutcomes[i].getParameter(parameter).round()
+                    offensiveGenomes[i].getParameter(parameter).round()
                 }" + System.lineSeparator()
             }
             output += "Defensive genome:" + System.lineSeparator()
-            output += "Hashcode = " + sortedOutcomes[i].bestDefensiveGenome.hashCode() + System.lineSeparator()
+            output += "Hashcode = " + offensiveGenomes[i].bestDefensiveGenome.hashCode() + System.lineSeparator()
             for (parameter in Parameter.values()) {
                 output += "$parameter = ${
-                    sortedOutcomes[i].bestDefensiveGenome!!.getParameter(parameter).round()
+                    offensiveGenomes[i].bestDefensiveGenome!!.getParameter(parameter).round()
                 }" + System.lineSeparator()
             }
             output += "Strategy details:" + System.lineSeparator()
-            for (strategyDetails in sortedOutcomes[i].strategyDetailsWithDefensiveGenome!!.withIndex()) {
+            for (strategyDetails in offensiveGenomes[i].strategyDetailsWithDefensiveGenome!!.withIndex()) {
                 output += "Strategy details ${strategyDetails.index + 1}: ${strategyDetails.value}" + System.lineSeparator()
             }
             output += System.lineSeparator()
