@@ -44,7 +44,8 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
                 DataLoader.loadDowToGoldData()
             )
             geneticAlgorithms += algorithm
-            val state = Runner.runCombining(algorithm, RUNS) as CoevolutionGeneticAlgorithmState
+            var state = loadState(i)
+            state = Runner.runCombining(algorithm, state, RUNS) as CoevolutionGeneticAlgorithmState
             state.save(name)
         }
     }

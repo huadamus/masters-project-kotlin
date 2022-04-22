@@ -73,14 +73,17 @@ class FourTypesExperiment : Experiment("four_types") {
     private lateinit var purityValues: List<Double>
 
     override fun run() {
+        val state = loadState()
         val genericGeneticAlgorithmHvParetoState =
-            (Runner.runCombining(genericGeneticAlgorithmHvPareto, RUNS) as GenericGeneticAlgorithmState)
+            (Runner.runCombining(genericGeneticAlgorithmHvPareto, state[0], RUNS) as GenericGeneticAlgorithmState)
         val genericGeneticAlgorithmNsgaIIState =
-            (Runner.runCombining(genericGeneticAlgorithmNsgaII, RUNS) as GenericGeneticAlgorithmState)
+            (Runner.runCombining(genericGeneticAlgorithmNsgaII, state[1], RUNS) as GenericGeneticAlgorithmState)
         val coevolutionGeneticAlgorithmHvParetoState =
-            (Runner.runCombining(coevolutionGeneticAlgorithmHvPareto, RUNS) as CoevolutionGeneticAlgorithmState)
+            (Runner.runCombining(
+                coevolutionGeneticAlgorithmHvPareto, state[2], RUNS
+            ) as CoevolutionGeneticAlgorithmState)
         val coevolutionGeneticAlgorithmNsgaIIState =
-            (Runner.runCombining(coevolutionGeneticAlgorithmNsgaII, RUNS) as CoevolutionGeneticAlgorithmState)
+            (Runner.runCombining(coevolutionGeneticAlgorithmNsgaII, state[3], RUNS) as CoevolutionGeneticAlgorithmState)
         genericGeneticAlgorithmHvParetoState.save(genericHvName)
         genericGeneticAlgorithmNsgaIIState.save(genericNsgaName)
         coevolutionGeneticAlgorithmHvParetoState.save(coevolutionHvName)

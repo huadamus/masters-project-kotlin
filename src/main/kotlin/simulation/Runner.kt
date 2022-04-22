@@ -5,12 +5,15 @@ import metaheuristic.GeneticAlgorithmState
 
 object Runner {
 
-    fun runCombining(geneticAlgorithm: GeneticAlgorithm, runs: Int): GeneticAlgorithmState {
-        var output: GeneticAlgorithmState? = null
+    fun runCombining(
+        geneticAlgorithm: GeneticAlgorithm,
+        initialState: GeneticAlgorithmState,
+        runs: Int
+    ): GeneticAlgorithmState {
+        var output = initialState
         for (run in 0 until runs) {
-            output = output?.combineArchiveWith(geneticAlgorithm.execute(run, geneticAlgorithm.getEmptyState()))
-                ?: geneticAlgorithm.execute(run, geneticAlgorithm.getEmptyState())
+            output = output.combineArchiveWith(geneticAlgorithm.execute(run, geneticAlgorithm.getEmptyState()))
         }
-        return output!!
+        return output
     }
 }

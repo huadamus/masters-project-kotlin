@@ -38,7 +38,9 @@ class ParametrizationExperiment : Experiment("parametrization") {
                         DataLoader.loadShillerPESP500Ratio(),
                         DataLoader.loadDowToGoldData()
                     )
-                    (Runner.runCombining(geneticAlgorithm, RUNS) as GenericGeneticAlgorithmState).save(name)
+                    (Runner.runCombining(
+                        geneticAlgorithm, geneticAlgorithm.getEmptyState(), RUNS
+                    ) as GenericGeneticAlgorithmState).save(name)
                 }
             }
         }
