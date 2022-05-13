@@ -16,8 +16,8 @@ data class StrategyDetails(
 
     override fun toString(): String {
         return "{$period, invested: ${developedInvested.round()}, ${
-            goldInvested.round()
-        }, ${crbInvested.round()}, ${emergingInvested.round()}" +
+            emergingInvested.round()
+        }, ${crbInvested.round()}, ${goldInvested.round()}" +
                 ", final: ${developedFinal.round()}, ${emergingFinal.round()}, ${crbFinal.round()}, ${
                     goldFinal.round()
                 }, profits: ${getDevelopedProfitPercentage().round()}%, ${
