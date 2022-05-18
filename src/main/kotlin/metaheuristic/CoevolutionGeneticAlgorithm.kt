@@ -67,54 +67,54 @@ class CoevolutionGeneticAlgorithm(
             )
 
             val assignedOffensivePopulation = offensiveGenomesPopulation.map { it.clone() }
-            when (selectionMethod) {
-                SelectionMethod.HV_PARETO -> for (offensiveGenome in assignedOffensivePopulation) {
-                    val randomOutcomeSolution = matchWithRandomOutcomes.first { it.isSame(offensiveGenome) }
-                    val randomOutcomeSolution2 =
-                        matchWithRandomOutcomes2.first { it.isSame(offensiveGenome) }
-                    val bestOutcomeSolution = matchWithBestOutcomes.first { it.isSame(offensiveGenome) }
-                    if (randomOutcomeSolution.getHvValue() > offensiveGenome.getHvValue()) {
-                        offensiveGenome.bestDefensiveGenome = randomOutcomeSolution.bestDefensiveGenome!!.clone()
-                        offensiveGenome.profitsWithDefensiveGenome = randomOutcomeSolution.profitsWithDefensiveGenome
-                        offensiveGenome.riskWithDefensiveGenome = randomOutcomeSolution.riskWithDefensiveGenome
+            for (offensiveGenome in assignedOffensivePopulation) {
+                val randomOutcomeSolution = matchWithRandomOutcomes.first { it.isSame(offensiveGenome) }
+                val randomOutcomeSolution2 = matchWithRandomOutcomes2.first { it.isSame(offensiveGenome) }
+                val bestOutcomeSolution = matchWithBestOutcomes.first { it.isSame(offensiveGenome) }
+                when (selectionMethod) {
+                    SelectionMethod.HV_PARETO -> {
+                        if (randomOutcomeSolution.getHvValue() > offensiveGenome.getHvValue()) {
+                            offensiveGenome.bestDefensiveGenome = randomOutcomeSolution.bestDefensiveGenome!!.clone()
+                            offensiveGenome.profitsWithDefensiveGenome =
+                                randomOutcomeSolution.profitsWithDefensiveGenome
+                            offensiveGenome.riskWithDefensiveGenome = randomOutcomeSolution.riskWithDefensiveGenome
+                            offensiveGenome.strategyDetailsWithDefensiveGenome =
+                                randomOutcomeSolution.strategyDetailsWithDefensiveGenome
+                        }
+                        if (randomOutcomeSolution2.getHvValue() > offensiveGenome.getHvValue()) {
+                            offensiveGenome.bestDefensiveGenome = randomOutcomeSolution2.bestDefensiveGenome!!.clone()
+                            offensiveGenome.profitsWithDefensiveGenome =
+                                randomOutcomeSolution2.profitsWithDefensiveGenome
+                            offensiveGenome.riskWithDefensiveGenome = randomOutcomeSolution2.riskWithDefensiveGenome
+                            offensiveGenome.strategyDetailsWithDefensiveGenome =
+                                randomOutcomeSolution2.strategyDetailsWithDefensiveGenome
+                        }
+                        if (bestOutcomeSolution.getHvValue() > offensiveGenome.getHvValue()) {
+                            offensiveGenome.bestDefensiveGenome = bestOutcomeSolution.bestDefensiveGenome!!.clone()
+                            offensiveGenome.profitsWithDefensiveGenome = bestOutcomeSolution.profitsWithDefensiveGenome
+                            offensiveGenome.riskWithDefensiveGenome = bestOutcomeSolution.riskWithDefensiveGenome
+                            offensiveGenome.strategyDetailsWithDefensiveGenome =
+                                bestOutcomeSolution.strategyDetailsWithDefensiveGenome
+                        }
+                    }
+                    SelectionMethod.NSGA_II, SelectionMethod.SPEA2 -> {
+                        val bestSolutions = paretoEvaluateOffensiveGenomes(
+                            listOf(
+                                randomOutcomeSolution,
+                                randomOutcomeSolution2,
+                                bestOutcomeSolution,
+                            )
+                        ).toMutableList()
+                        if (offensiveGenome.profitsWithDefensiveGenome != null) {
+                            bestSolutions += offensiveGenome.clone()
+                        }
+                        val randomBest = bestSolutions.random()
+                        offensiveGenome.profitsWithDefensiveGenome = randomBest.profitsWithDefensiveGenome
+                        offensiveGenome.riskWithDefensiveGenome = randomBest.riskWithDefensiveGenome
+                        offensiveGenome.bestDefensiveGenome = randomBest.bestDefensiveGenome!!.clone()
                         offensiveGenome.strategyDetailsWithDefensiveGenome =
-                            randomOutcomeSolution.strategyDetailsWithDefensiveGenome
+                            randomBest.strategyDetailsWithDefensiveGenome
                     }
-                    if (randomOutcomeSolution2.getHvValue() > offensiveGenome.getHvValue()) {
-                        offensiveGenome.bestDefensiveGenome = randomOutcomeSolution2.bestDefensiveGenome!!.clone()
-                        offensiveGenome.profitsWithDefensiveGenome = randomOutcomeSolution2.profitsWithDefensiveGenome
-                        offensiveGenome.riskWithDefensiveGenome = randomOutcomeSolution2.riskWithDefensiveGenome
-                        offensiveGenome.strategyDetailsWithDefensiveGenome =
-                            randomOutcomeSolution2.strategyDetailsWithDefensiveGenome
-                    }
-                    if (bestOutcomeSolution.getHvValue() > offensiveGenome.getHvValue()) {
-                        offensiveGenome.bestDefensiveGenome = bestOutcomeSolution.bestDefensiveGenome!!.clone()
-                        offensiveGenome.profitsWithDefensiveGenome = bestOutcomeSolution.profitsWithDefensiveGenome
-                        offensiveGenome.riskWithDefensiveGenome = bestOutcomeSolution.riskWithDefensiveGenome
-                        offensiveGenome.strategyDetailsWithDefensiveGenome =
-                            bestOutcomeSolution.strategyDetailsWithDefensiveGenome
-                    }
-                }
-                SelectionMethod.NSGA_II -> for (offensiveGenome in assignedOffensivePopulation) {
-                    val randomOutcomeSolution = matchWithRandomOutcomes.first { it.isSame(offensiveGenome) }
-                    val randomOutcomeSolution2 =
-                        matchWithRandomOutcomes2.first { it.isSame(offensiveGenome) }
-                    val bestOutcomeSolution = matchWithBestOutcomes.first { it.isSame(offensiveGenome) }
-                    val bestSolutions = paretoEvaluateOffensiveGenomes(
-                        listOf(
-                            randomOutcomeSolution,
-                            randomOutcomeSolution2,
-                            bestOutcomeSolution,
-                        )
-                    ).toMutableList()
-                    if (offensiveGenome.profitsWithDefensiveGenome != null) {
-                        bestSolutions += offensiveGenome.clone()
-                    }
-                    val randomBest = bestSolutions.random()
-                    offensiveGenome.profitsWithDefensiveGenome = randomBest.profitsWithDefensiveGenome
-                    offensiveGenome.riskWithDefensiveGenome = randomBest.riskWithDefensiveGenome
-                    offensiveGenome.bestDefensiveGenome = randomBest.bestDefensiveGenome!!.clone()
-                    offensiveGenome.strategyDetailsWithDefensiveGenome = randomBest.strategyDetailsWithDefensiveGenome
                 }
             }
 
@@ -161,6 +161,14 @@ class CoevolutionGeneticAlgorithm(
                                 .shuffled()
                     defensiveGenomesPopulation = newDefensivePopulation +
                             getNewGenerationDefensiveGenomesByRankAndVolume(defensiveOutcomes).toMutableList()
+                                .shuffled()
+                }
+                SelectionMethod.SPEA2 -> {
+                    offensiveGenomesPopulation = newOffensivePopulation +
+                            getNewGenerationOffensiveGenomesByStrength(assignedOffensivePopulation).toMutableList()
+                                .shuffled()
+                    defensiveGenomesPopulation = newDefensivePopulation +
+                            getNewGenerationDefensiveGenomesByStrength(defensiveOutcomes).toMutableList()
                                 .shuffled()
                 }
             }

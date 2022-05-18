@@ -5,10 +5,13 @@ package metaheuristic
 import simulation.GenomeGenerator
 import ELITISM
 import POPULATION_SIZE
+import SPEA2_NEAREST_DISTANCE
 import TOURNAMENT_PICKS
 import model.Genome
 import model.OffensiveGenome
 import simulation.SimulationOutcome
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 fun initializeGenomes(periodMonths: Int): List<Genome> {
     val output = mutableListOf<Genome>()
@@ -49,6 +52,65 @@ fun getNewGenerationOffensiveGenomesByRankAndVolume(outcomes: List<OffensiveGeno
     val rankedOutcomesWithVolume = getRankedOffensiveOutcomesVolume(rankedOutcomes)
     val selectedGenomes = selectWithTournamentByRankAndVolume(rankedOutcomesWithVolume)
     return getMutatedGenomes(getCrossoverOffensiveGenomes(selectedGenomes)) as List<OffensiveGenome>
+}
+
+fun getNewGenerationDefensiveGenomesByStrength(outcomes: List<SimulationOutcome>): List<Genome> {
+    val outcomesWithStrength = evaluateDefensiveGenomesStrength(outcomes)
+    val outcomesWithFitness = evaluateDefensiveGenomesStrengthRawFitness(outcomesWithStrength)
+    val outcomesWithCorrectFitness =
+        outcomesWithFitness.map { case ->
+            Pair(
+                case.first,
+                case.second + evaluateNNearestDistanceSum(
+                    SPEA2_NEAREST_DISTANCE,
+                    Pair(case.first.profits, case.first.risk),
+                    (outcomesWithFitness - case).map { Pair(it.first.profits, it.first.risk) }
+                )
+            )
+        }
+    val binarySelectedGenomes = mutableListOf<Genome>()
+    while (binarySelectedGenomes.size != POPULATION_SIZE) {
+        val outcome1 = outcomesWithCorrectFitness.random()
+        val outcome2 = outcomesWithCorrectFitness.random()
+        binarySelectedGenomes += if (outcome1.second > outcome2.second) {
+            outcome1.first.genome.clone()
+        } else {
+            outcome2.first.genome.clone()
+        }
+    }
+    return getMutatedGenomes(getCrossoverDefensiveGenomes(binarySelectedGenomes))
+}
+
+fun getNewGenerationOffensiveGenomesByStrength(outcomes: List<OffensiveGenome>): List<OffensiveGenome> {
+    val outcomesWithStrength = evaluateOffensiveGenomesStrength(outcomes)
+    val outcomesWithFitness = evaluateOffensiveGenomesStrengthRawFitness(outcomesWithStrength)
+    val outcomesWithCorrectFitness =
+        outcomesWithFitness.map { case ->
+            Pair(
+                case.first,
+                case.second + evaluateNNearestDistanceSum(
+                    SPEA2_NEAREST_DISTANCE,
+                    Pair(case.first.profitsWithDefensiveGenome!!, case.first.riskWithDefensiveGenome!!),
+                    (outcomesWithFitness - case).map {
+                        Pair(
+                            it.first.profitsWithDefensiveGenome!!,
+                            it.first.riskWithDefensiveGenome!!
+                        )
+                    }
+                )
+            )
+        }
+    val binarySelectedGenomes = mutableListOf<OffensiveGenome>()
+    while (binarySelectedGenomes.size != POPULATION_SIZE) {
+        val outcome1 = outcomesWithCorrectFitness.random()
+        val outcome2 = outcomesWithCorrectFitness.random()
+        binarySelectedGenomes += if (outcome1.second > outcome2.second) {
+            outcome2.first.clone()
+        } else {
+            outcome1.first.clone()
+        }
+    }
+    return getMutatedGenomes(getCrossoverOffensiveGenomes(binarySelectedGenomes)) as List<OffensiveGenome>
 }
 
 fun paretoEvaluateOffensiveGenomes(outcomes: List<OffensiveGenome>): List<OffensiveGenome> {
@@ -96,10 +158,104 @@ fun paretoEvaluate(outcomes: List<SimulationOutcome>): List<SimulationOutcome> {
         .distinctBy { it.risk }
 }
 
-fun calculateParetoPurity(frontToCalculatePurity: List<SimulationOutcome>, mainFront: List<SimulationOutcome>): Double {
+fun evaluateDefensiveGenomesStrength(outcomes: List<SimulationOutcome>): Set<Pair<SimulationOutcome, Int>> {
+    val output = mutableSetOf<Pair<SimulationOutcome, Int>>()
+    for (outcome in outcomes) {
+        var strength = 0
+        for (comparedOutcome in outcomes) {
+            if (outcome != comparedOutcome) {
+                if (!(comparedOutcome.profits >= outcome.profits && comparedOutcome.risk < outcome.risk)
+                    && !(comparedOutcome.profits > outcome.profits && comparedOutcome.risk <= outcome.risk)
+                ) {
+                    strength++
+                }
+            }
+        }
+        output += Pair(outcome.clone(), strength)
+    }
+    return output
+}
+
+fun evaluateOffensiveGenomesStrength(outcomes: List<OffensiveGenome>): Set<Pair<OffensiveGenome, Int>> {
+    val output = mutableSetOf<Pair<OffensiveGenome, Int>>()
+    for (outcome in outcomes) {
+        var strength = 0
+        for (comparedOutcome in outcomes) {
+            if (!outcome.isSame(comparedOutcome)) {
+                if (!(comparedOutcome.profitsWithDefensiveGenome!! >= outcome.profitsWithDefensiveGenome!!
+                            && comparedOutcome.riskWithDefensiveGenome!! < outcome.riskWithDefensiveGenome!!)
+                    && !(comparedOutcome.profitsWithDefensiveGenome!! > outcome.profitsWithDefensiveGenome!!
+                            && comparedOutcome.riskWithDefensiveGenome!! <= outcome.riskWithDefensiveGenome!!)
+                ) {
+                    strength++
+                }
+            }
+        }
+        output += Pair(outcome.clone(), strength)
+    }
+    return output
+}
+
+fun evaluateDefensiveGenomesStrengthRawFitness(outcomesWithStrength: Set<Pair<SimulationOutcome, Int>>):
+        Set<Pair<SimulationOutcome, Int>> {
+    val output = mutableSetOf<Pair<SimulationOutcome, Int>>()
+    for (outcome in outcomesWithStrength) {
+        var rawFitness = 0
+        for (comparedOutcome in outcomesWithStrength) {
+            if (outcome.first != comparedOutcome.first) {
+                if ((comparedOutcome.first.profits >= outcome.first.profits
+                            && comparedOutcome.first.risk < outcome.first.risk)
+                    || (comparedOutcome.first.profits > outcome.first.profits
+                            && comparedOutcome.first.risk <= outcome.first.risk)
+                ) {
+                    rawFitness += comparedOutcome.second
+                }
+            }
+        }
+        output += Pair(outcome.first, rawFitness)
+    }
+    return output
+}
+
+fun evaluateOffensiveGenomesStrengthRawFitness(outcomesWithStrength: Set<Pair<OffensiveGenome, Int>>):
+        Set<Pair<OffensiveGenome, Int>> {
+    val output = mutableSetOf<Pair<OffensiveGenome, Int>>()
+    for (outcome in outcomesWithStrength) {
+        var rawFitness = 0
+        for (comparedOutcome in outcomesWithStrength) {
+            if (outcome.first != comparedOutcome.first) {
+                if ((comparedOutcome.first.profitsWithDefensiveGenome!! >= outcome.first.profitsWithDefensiveGenome!!
+                            && comparedOutcome.first.riskWithDefensiveGenome!! < outcome.first.riskWithDefensiveGenome!!)
+                    || (comparedOutcome.first.profitsWithDefensiveGenome!! > outcome.first.profitsWithDefensiveGenome!!
+                            && comparedOutcome.first.riskWithDefensiveGenome!! <= outcome.first.riskWithDefensiveGenome!!)
+                ) {
+                    rawFitness += comparedOutcome.second
+                }
+            }
+        }
+        output += Pair(outcome.first, rawFitness)
+    }
+    return output
+}
+
+fun evaluateNNearestDistanceSum(n: Int, case: Pair<Double, Double>, otherCases: List<Pair<Double, Double>>): Double {
+    val distances = mutableListOf<Double>()
+    for (otherCase in otherCases) {
+        val distance = sqrt((otherCase.first - case.first).pow(2) + (otherCase.second - case.second).pow(2))
+        distances += distance
+    }
+    return distances.sortedBy { it }
+        .take(n)
+        .sum()
+}
+
+fun calculateParetoPurity(
+    frontToCalculatePurity: List<SimulationOutcome>,
+    mainFront: List<SimulationOutcome>
+): Double {
     var undominated = 0
     for (outcome in frontToCalculatePurity) {
-        if(outcome in mainFront) {
+        if (outcome in mainFront) {
             undominated++
         }
     }

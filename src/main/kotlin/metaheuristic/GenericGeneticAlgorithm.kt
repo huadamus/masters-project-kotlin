@@ -59,6 +59,9 @@ class GenericGeneticAlgorithm(
                 SelectionMethod.NSGA_II -> (newPopulation + getNewGenerationOffensiveGenomesByRankAndVolume(generation))
                     .toMutableList()
                     .shuffled()
+                SelectionMethod.SPEA2 -> (newPopulation + getNewGenerationOffensiveGenomesByStrength(generation))
+                    .toMutableList()
+                    .shuffled()
             }
         }
         return GenericGeneticAlgorithmState(population, archive)

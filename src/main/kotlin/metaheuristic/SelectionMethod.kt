@@ -1,5 +1,5 @@
 package metaheuristic
 
 enum class SelectionMethod {
-    HV_PARETO, NSGA_II
+    HV_PARETO, NSGA_II, SPEA2
 }

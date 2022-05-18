@@ -28,7 +28,8 @@ abstract class ChartDrawer(private val chartTitle: String) : JFrame() {
         Color(0, 220, 0),
         Color(0, 0, 255),
         Color(170, 80, 40),
-        Color(220, 20, 220),
+        Color(250, 0, 220),
+        Color(100, 0, 100),
     )
     val shapes = listOf(
         Ellipse2D.Double(-3.0, -3.0, 6.0, 6.0),

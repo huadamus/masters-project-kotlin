@@ -2,28 +2,29 @@
 
 import devtools.getTrainingAndTestPeriods
 import experiment.CrossValidationExperiment
-import experiment.FourTypesExperiment
+import experiment.ConfigurationExperiment
 import model.Date
 import data.CROSS_VALIDATION_DATASET_72_72
 import experiment.ParametrizationExperiment
 
 //metaheuristic
 const val POPULATION_SIZE = 100
-const val GENERATIONS = 7500
+const val GENERATIONS = 3000
 const val CROSSOVER_CHANCE = 0.85
 const val MUTATION_CHANCE = 0.1
 const val TOURNAMENT_PICKS = 19
+const val SPEA2_NEAREST_DISTANCE = 3
 const val ELITISM = 0
 
 //simulation
 val CROSS_VALIDATION_DATASET = CROSS_VALIDATION_DATASET_72_72
 const val TESTING_PERIODS = 1
-const val RUNS = 5
+const val RUNS = 3
 
 fun main() {
     //runParametrizationExperiment()
-    //runFourTypesExperiment()
-    runCrossValidationExperiment()
+    runConfigurationsExperiment()
+    //runCrossValidationExperiment()
 }
 
 private fun generatePeriods() {
@@ -39,10 +40,10 @@ private fun runParametrizationExperiment() {
     parametrizationExperiment.calculateAndPrintOutcomes()
 }
 
-private fun runFourTypesExperiment() {
-    val fourTypesExperiment = FourTypesExperiment()
-    //fourTypesExperiment.run()
-    fourTypesExperiment.showResults()
+private fun runConfigurationsExperiment() {
+    val configurationExperiment = ConfigurationExperiment()
+    configurationExperiment.run()
+    configurationExperiment.showResults()
 }
 
 private fun runCrossValidationExperiment() {

@@ -17,11 +17,13 @@ internal class GeneticAlgorithmOperationsTest {
             SimulationOutcome(15.0, 8.0),
         )
         val output = paretoEvaluate(data)
-        assertEquals(listOf(
-            SimulationOutcome(15.0, 8.0),
-            SimulationOutcome(12.5, 7.0)
-        ).toSet(),
-            output.toSet())
+        assertEquals(
+            listOf(
+                SimulationOutcome(15.0, 8.0),
+                SimulationOutcome(12.5, 7.0)
+            ).toSet(),
+            output.toSet()
+        )
     }
 
     @Test

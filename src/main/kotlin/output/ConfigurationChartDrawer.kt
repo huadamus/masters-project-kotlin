@@ -14,21 +14,23 @@ import simulation.invertedGenerationalDistanceForSet
 import simulation.spacingForSet
 
 
-class FourTypesChartDrawer(private val purityValues: Array<Double>) :
+class ConfigurationChartDrawer(private val purityValues: Array<Double>) :
     ChartDrawer("Badanie konfiguracji systemu") {
     private val labels = arrayOf(
         "Gener. AG, sel. hypervolume",
         "Gener. AG, sel. NSGA-II",
+        "Gener. AG, sel. SPEA2",
         "Koew. AG, sel. hypervolume",
-        "Koew. AG, sel."
+        "Koew. AG, sel. NSGA-II",
+        "Koew. AG, sel. SPEA2",
     )
     private var algorithmOutcomes: List<List<SimulationOutcome>>? = null
 
     override fun createDataset(algorithmOutcomes: List<List<SimulationOutcome>>): XYDataset {
         this.algorithmOutcomes = algorithmOutcomes
-        if (algorithmOutcomes.size != 4) {
+        if (algorithmOutcomes.size != 6) {
             throw Exception(
-                "This chart drawer supports four algorithm outcomes"
+                "This chart drawer supports six algorithm outcomes"
             )
         }
         val dataset = XYSeriesCollection()
@@ -42,16 +44,26 @@ class FourTypesChartDrawer(private val purityValues: Array<Double>) :
             noCoevolutionNsga2Series.add(outcome.risk, outcome.profits)
         }
         dataset.addSeries(noCoevolutionNsga2Series)
-        val coevolutionHvParetoSeries = XYSeries(labels[2])
+        val noCoevolutionSpea2Series = XYSeries(labels[2])
         for (outcome in algorithmOutcomes[2]) {
+            noCoevolutionSpea2Series.add(outcome.risk, outcome.profits)
+        }
+        dataset.addSeries(noCoevolutionSpea2Series)
+        val coevolutionHvParetoSeries = XYSeries(labels[3])
+        for (outcome in algorithmOutcomes[3]) {
             coevolutionHvParetoSeries.add(outcome.risk, outcome.profits)
         }
         dataset.addSeries(coevolutionHvParetoSeries)
-        val coevolutionNsgaIISeries = XYSeries(labels[3])
-        for (outcome in algorithmOutcomes[3]) {
+        val coevolutionNsgaIISeries = XYSeries(labels[4])
+        for (outcome in algorithmOutcomes[4]) {
             coevolutionNsgaIISeries.add(outcome.risk, outcome.profits)
         }
         dataset.addSeries(coevolutionNsgaIISeries)
+        val coevolutionSpea2Series = XYSeries(labels[5])
+        for (outcome in algorithmOutcomes[5]) {
+            coevolutionSpea2Series.add(outcome.risk, outcome.profits)
+        }
+        dataset.addSeries(coevolutionSpea2Series)
         return dataset
     }
 
@@ -60,7 +72,7 @@ class FourTypesChartDrawer(private val purityValues: Array<Double>) :
             plot.getRendererForDataset(plot.getDataset(0)).setSeriesPaint(i, seriesColors[i])
         }
         val chartinfo = TextTitle(buildString {
-            for (i in 0 until 4) {
+            for (i in 0 until 6) {
                 append(
                     "${labels[i]} - Purity: ${"%.3f".format(purityValues[i])}, Pareto Front size: ${algorithmOutcomes!![i].size}, " +
                             "Inverted Generational Distance: ${
