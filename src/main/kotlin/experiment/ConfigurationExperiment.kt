@@ -7,6 +7,7 @@ import model.Date
 import output.ConfigurationChartDrawer
 import simulation.Runner
 import simulation.SimulationOutcome
+import kotlin.system.measureTimeMillis
 
 class ConfigurationExperiment : Experiment("configuration") {
 
@@ -131,27 +132,58 @@ class ConfigurationExperiment : Experiment("configuration") {
         DataLoader.loadDowToGoldData()
     )
     private lateinit var purityValues: List<Double>
+    private lateinit var timeValues: MutableList<Long>
 
     override fun run() {
         val state = loadState()
-        val genericGeneticAlgorithmHvParetoState =
-            (Runner.runCombining(genericGeneticAlgorithmHvPareto, state[0], RUNS) as GenericGeneticAlgorithmState)
-        val genericGeneticAlgorithmNsgaIIState =
-            (Runner.runCombining(genericGeneticAlgorithmNsgaII, state[1], RUNS) as GenericGeneticAlgorithmState)
-        val genericGeneticAlgorithmSpea2State =
-            (Runner.runCombining(genericGeneticAlgorithmSpea2, state[2], RUNS) as GenericGeneticAlgorithmState)
-        val genericGeneticAlgorithmNtga2State =
-            (Runner.runCombining(genericGeneticAlgorithmNtga2, state[3], RUNS) as GenericGeneticAlgorithmState)
-        val coevolutionGeneticAlgorithmHvParetoState =
-            (Runner.runCombining(
-                coevolutionGeneticAlgorithmHvPareto, state[4], RUNS
+        timeValues = mutableListOf()
+        lateinit var genericGeneticAlgorithmHvParetoState: GenericGeneticAlgorithmState
+        lateinit var genericGeneticAlgorithmNsgaIIState: GenericGeneticAlgorithmState
+        lateinit var genericGeneticAlgorithmSpea2State: GenericGeneticAlgorithmState
+        lateinit var genericGeneticAlgorithmNtga2State: GenericGeneticAlgorithmState
+        lateinit var coevolutionGeneticAlgorithmHvParetoState: CoevolutionGeneticAlgorithmState
+        lateinit var coevolutionGeneticAlgorithmNsgaIIState: CoevolutionGeneticAlgorithmState
+        lateinit var coevolutionGeneticAlgorithmSpea2State: CoevolutionGeneticAlgorithmState
+        lateinit var coevolutionGeneticAlgorithmNtga2State: CoevolutionGeneticAlgorithmState
+        timeValues += measureTimeMillis {
+            genericGeneticAlgorithmHvParetoState =
+                (Runner.runCombining(genericGeneticAlgorithmHvPareto, state[0], RUNS) as GenericGeneticAlgorithmState)
+        } / 1000
+        timeValues += measureTimeMillis {
+            genericGeneticAlgorithmNsgaIIState =
+                (Runner.runCombining(genericGeneticAlgorithmNsgaII, state[1], RUNS) as GenericGeneticAlgorithmState)
+        } / 1000
+        timeValues += measureTimeMillis {
+            genericGeneticAlgorithmSpea2State =
+                (Runner.runCombining(genericGeneticAlgorithmSpea2, state[2], RUNS) as GenericGeneticAlgorithmState)
+        } / 1000
+        timeValues += measureTimeMillis {
+            genericGeneticAlgorithmNtga2State =
+                (Runner.runCombining(genericGeneticAlgorithmNtga2, state[3], RUNS) as GenericGeneticAlgorithmState)
+        } / 1000
+        timeValues += measureTimeMillis {
+            coevolutionGeneticAlgorithmHvParetoState =
+                (Runner.runCombining(
+                    coevolutionGeneticAlgorithmHvPareto, state[4], RUNS
+                ) as CoevolutionGeneticAlgorithmState)
+        } / 1000
+        timeValues += measureTimeMillis {
+            coevolutionGeneticAlgorithmNsgaIIState =
+                (Runner.runCombining(
+                    coevolutionGeneticAlgorithmNsgaII, state[5], RUNS
+                ) as CoevolutionGeneticAlgorithmState)
+        } / 1000
+        timeValues += measureTimeMillis {
+            coevolutionGeneticAlgorithmSpea2State =
+                (Runner.runCombining(
+                    coevolutionGeneticAlgorithmSpea2, state[6], RUNS
+                ) as CoevolutionGeneticAlgorithmState)
+        } / 1000
+        timeValues += measureTimeMillis {
+            coevolutionGeneticAlgorithmNtga2State = (Runner.runCombining(
+                coevolutionGeneticAlgorithmNtga2, state[7], RUNS
             ) as CoevolutionGeneticAlgorithmState)
-        val coevolutionGeneticAlgorithmNsgaIIState =
-            (Runner.runCombining(coevolutionGeneticAlgorithmNsgaII, state[5], RUNS) as CoevolutionGeneticAlgorithmState)
-        val coevolutionGeneticAlgorithmSpea2State =
-            (Runner.runCombining(coevolutionGeneticAlgorithmSpea2, state[6], RUNS) as CoevolutionGeneticAlgorithmState)
-        val coevolutionGeneticAlgorithmNtga2State =
-            (Runner.runCombining(coevolutionGeneticAlgorithmNtga2, state[7], RUNS) as CoevolutionGeneticAlgorithmState)
+        } / 1000
         genericGeneticAlgorithmHvParetoState.save(genericHvName)
         genericGeneticAlgorithmNsgaIIState.save(genericNsgaName)
         genericGeneticAlgorithmSpea2State.save(genericSpeaName)
@@ -215,11 +247,16 @@ class ConfigurationExperiment : Experiment("configuration") {
     }
 
     override fun drawChart(outcomes: List<List<SimulationOutcome>>) {
-        ConfigurationChartDrawer(purityValues.toTypedArray()).drawChart(outcomes)
+        ConfigurationChartDrawer(purityValues.toTypedArray(), timeValues.map { it.toInt() }.toTypedArray()).drawChart(
+            outcomes
+        )
     }
 
     override fun saveChart(runId: Int, outcomes: List<List<SimulationOutcome>>) {
-        ConfigurationChartDrawer(purityValues.toTypedArray()).saveChart("configuration_run_$runId", outcomes)
+        ConfigurationChartDrawer(
+            purityValues.toTypedArray(),
+            timeValues.map { it.toInt() }.toTypedArray()
+        ).saveChart("configuration_run_$runId", outcomes)
     }
 
     private fun loadState(): List<GeneticAlgorithmState> {

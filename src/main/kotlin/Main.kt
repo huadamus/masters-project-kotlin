@@ -9,7 +9,7 @@ import experiment.ParametrizationExperiment
 
 //metaheuristic
 const val POPULATION_SIZE = 100
-const val GENERATIONS = 500
+const val GENERATIONS = 100
 const val CROSSOVER_CHANCE = 0.85
 const val MUTATION_CHANCE = 0.1
 const val TOURNAMENT_PICKS = 19
@@ -20,7 +20,7 @@ const val ELITISM = 0
 //simulation
 val CROSS_VALIDATION_DATASET = CROSS_VALIDATION_DATASET_72_72
 const val TESTING_PERIODS = 1
-const val RUNS = 2
+const val RUNS = 1
 
 fun main() {
     //runParametrizationExperiment()

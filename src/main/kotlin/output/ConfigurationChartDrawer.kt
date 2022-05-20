@@ -2,19 +2,16 @@ package output
 
 import org.jfree.chart.JFreeChart
 import org.jfree.chart.plot.XYPlot
-import org.jfree.chart.title.TextTitle
 import org.jfree.data.xy.XYDataset
 import org.jfree.data.xy.XYSeries
 import org.jfree.data.xy.XYSeriesCollection
-import org.jfree.ui.HorizontalAlignment.CENTER
-import org.jfree.ui.RectangleEdge.TOP
 import simulation.SimulationOutcome
 import simulation.hvParetoFitnessFunctionForSet
 import simulation.invertedGenerationalDistanceForSet
 import simulation.spacingForSet
 
 
-class ConfigurationChartDrawer(private val purityValues: Array<Double>) :
+class ConfigurationChartDrawer(private val purityValues: Array<Double>, private val timeValues: Array<Int>) :
     ChartDrawer("Badanie konfiguracji systemu") {
     private val labels = arrayOf(
         "Gener. AG, sel. hypervolume",
@@ -89,7 +86,7 @@ class ConfigurationChartDrawer(private val purityValues: Array<Double>) :
         for (i in plot.getDataset(0).seriesCount / 2 until plot.getDataset(0).seriesCount) {
             plot.getRendererForDataset(plot.getDataset(0)).setSeriesShape(i, shapes[0])
         }
-        val chartinfo = TextTitle(buildString {
+        val chartinfo = buildString {
             for (i in 0 until 8) {
                 append(
                     "${labels[i]} - Purity: ${"%.3f".format(purityValues[i])}, Pareto Front size: ${algorithmOutcomes!![i].size}, " +
@@ -120,13 +117,11 @@ class ConfigurationChartDrawer(private val purityValues: Array<Double>) :
                                         )
                                     })
                                 )
-                            }" +
+                            } Time: ${timeValues[i]}s" +
                             System.lineSeparator()
                 )
             }
-        })
-        chartinfo.position = TOP
-        chartinfo.horizontalAlignment = CENTER
-        chart.addSubtitle(chartinfo)
+        }
+        println(chartinfo)
     }
 }
