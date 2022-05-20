@@ -4,6 +4,7 @@ package metaheuristic
 
 import simulation.GenomeGenerator
 import ELITISM
+import NTGA2_GS_GENERATIONS
 import POPULATION_SIZE
 import SPEA2_NEAREST_DISTANCE
 import TOURNAMENT_PICKS
@@ -46,7 +47,6 @@ fun getNewGenerationDefensiveGenomesByRankAndVolume(outcomes: List<SimulationOut
     return getMutatedGenomes(getCrossoverDefensiveGenomes(selectedGenomes))
 }
 
-@Suppress("UNCHECKED_CAST")
 fun getNewGenerationOffensiveGenomesByRankAndVolume(outcomes: List<OffensiveGenome>): List<OffensiveGenome> {
     val rankedOutcomes = getRankedOffensiveOutcomes(outcomes)
     val rankedOutcomesWithVolume = getRankedOffensiveOutcomesVolume(rankedOutcomes)
@@ -113,6 +113,78 @@ fun getNewGenerationOffensiveGenomesByStrength(outcomes: List<OffensiveGenome>):
     return getMutatedGenomes(getCrossoverOffensiveGenomes(binarySelectedGenomes)) as List<OffensiveGenome>
 }
 
+fun getNewGenerationDefensiveGenomesByNtgaMethod(
+    generation: Int,
+    outcomes: Collection<SimulationOutcome>,
+    archive: Collection<SimulationOutcome>
+): List<Genome> {
+    val combined = outcomes + archive
+    val selection = if (generation.mod(2 * NTGA2_GS_GENERATIONS) < NTGA2_GS_GENERATIONS) {
+        val rankedOutcomes = getRankedDefensiveOutcomes(combined)
+        val rankedOutcomesWithVolume = getRankedDefensiveOutcomesVolume(rankedOutcomes)
+        selectWithTournamentByRankAndVolume(rankedOutcomesWithVolume)
+    } else {
+        val selected = mutableListOf<Genome>()
+        while (selected.size < POPULATION_SIZE) {
+            selected += selectDefensiveGenomesWithGapSelection(combined).toList()
+                .map { it.genome.clone() }
+        }
+        selected
+    }
+    val children = mutableListOf<Genome>()
+    for (i in 0 until POPULATION_SIZE / 2) {
+        children += selection[i * 2].modularCrossover(selection[i * 2 + 1]).toList()
+    }
+    children.forEach { it.mutate() }
+    return children
+}
+
+fun getNewGenerationOffensiveGenomesByNtgaMethod(
+    generation: Int,
+    outcomes: Collection<OffensiveGenome>,
+    archive: Collection<OffensiveGenome>
+): List<OffensiveGenome> {
+    val combined = outcomes + archive
+    val selection = if (generation.mod(2 * NTGA2_GS_GENERATIONS) < NTGA2_GS_GENERATIONS) {
+        val rankedOutcomes = getRankedOffensiveOutcomes(combined)
+        val rankedOutcomesWithVolume = getRankedOffensiveOutcomesVolume(rankedOutcomes)
+        selectWithTournamentByRankAndVolume(rankedOutcomesWithVolume)
+    } else {
+        val selected = mutableListOf<OffensiveGenome>()
+        while (selected.size < POPULATION_SIZE) {
+            selected += selectOffensiveGenomesWithGapSelection(combined).toList()
+                .map { it.clone() }
+        }
+        selected
+    }
+    val children = mutableListOf<OffensiveGenome>()
+    for (i in 0 until POPULATION_SIZE / 2) {
+        children += selection[i * 2].modularCrossover(selection[i * 2 + 1]).toList()
+    }
+    children.forEach { it.mutate() }
+    return children
+}
+
+fun paretoEvaluate(outcomes: List<SimulationOutcome>): List<SimulationOutcome> {
+    val output = mutableSetOf<SimulationOutcome>()
+    outer@ for (outcome in outcomes) {
+        for (comparedOutcome in outcomes) {
+            if (outcome != comparedOutcome) {
+                if ((comparedOutcome.profits >= outcome.profits && comparedOutcome.risk < outcome.risk)
+                    || (comparedOutcome.profits > outcome.profits && comparedOutcome.risk <= outcome.risk)
+                ) {
+                    continue@outer
+                }
+            }
+        }
+        output.add(outcome.clone())
+    }
+    return output.sortedByDescending { it.profits }
+        .distinctBy { it.profits }
+        .sortedByDescending { it.risk }
+        .distinctBy { it.risk }
+}
+
 fun paretoEvaluateOffensiveGenomes(outcomes: List<OffensiveGenome>): List<OffensiveGenome> {
     val output = mutableSetOf<OffensiveGenome>()
     outer@ for (outcome in outcomes) {
@@ -136,26 +208,6 @@ fun paretoEvaluateOffensiveGenomes(outcomes: List<OffensiveGenome>): List<Offens
         .distinctBy { it.profitsWithDefensiveGenome!! }
         .sortedByDescending { it.riskWithDefensiveGenome!! }
         .distinctBy { it.riskWithDefensiveGenome!! }
-}
-
-fun paretoEvaluate(outcomes: List<SimulationOutcome>): List<SimulationOutcome> {
-    val output = mutableSetOf<SimulationOutcome>()
-    outer@ for (outcome in outcomes) {
-        for (comparedOutcome in outcomes) {
-            if (outcome != comparedOutcome) {
-                if ((comparedOutcome.profits >= outcome.profits && comparedOutcome.risk < outcome.risk)
-                    || (comparedOutcome.profits > outcome.profits && comparedOutcome.risk <= outcome.risk)
-                ) {
-                    continue@outer
-                }
-            }
-        }
-        output.add(outcome.clone())
-    }
-    return output.sortedByDescending { it.profits }
-        .distinctBy { it.profits }
-        .sortedByDescending { it.risk }
-        .distinctBy { it.risk }
 }
 
 fun evaluateDefensiveGenomesStrength(outcomes: List<SimulationOutcome>): Set<Pair<SimulationOutcome, Int>> {
@@ -379,13 +431,106 @@ fun <T> selectWithTournamentByRankAndVolume(outcomes: List<Triple<T, Int, Double
         List<T> {
     val output = mutableListOf<T>()
     while (output.size < POPULATION_SIZE - ELITISM) {
-        output += outcomes.shuffled()
+        val taken = outcomes.shuffled()
             .take(TOURNAMENT_PICKS)
-            .sortedBy { it.second }
+        output += taken
+            .filter { individual -> individual.second == taken.map { it.second }.minByOrNull { it } }
             .maxByOrNull { it.third }!!
             .first
     }
     return output
+}
+
+fun selectDefensiveGenomesWithGapSelection(
+    population: List<SimulationOutcome>
+): Pair<SimulationOutcome, SimulationOutcome> {
+    val firstParent = selectWithTournamentByGaps(population).clone()
+    val neighbors = getEuclideanNeighbors(firstParent, population)
+    var secondParent = neighbors.random()?.first?.clone()
+    if (secondParent == null) {
+        secondParent = selectWithTournamentByGaps(population)
+    }
+    return Pair(firstParent, secondParent)
+}
+
+fun selectOffensiveGenomesWithGapSelection(
+    population: List<OffensiveGenome>
+): Pair<OffensiveGenome, OffensiveGenome> {
+    val firstParent = selectOffensiveGenomesWithTournamentByGaps(population).clone()
+    val neighbors = getEuclideanNeighbors(firstParent, population)
+    var secondParent = neighbors.random()?.first?.clone()
+    if (secondParent == null) {
+        secondParent = selectOffensiveGenomesWithTournamentByGaps(population)
+    }
+    return Pair(firstParent, secondParent)
+}
+
+fun selectWithTournamentByGaps(outcomes: List<SimulationOutcome>): SimulationOutcome {
+    return outcomes.shuffled()
+        .take(TOURNAMENT_PICKS)
+        .map { outcome ->
+            val neighbors = getEuclideanNeighbors(outcome, outcomes)
+            val distance = if (neighbors.contains(null)) {
+                Double.MAX_VALUE
+            } else {
+                neighbors.maxOf { it!!.second }
+            }
+            Pair(outcome, distance)
+        }
+        .maxByOrNull { it.second }!!.first
+}
+
+fun selectOffensiveGenomesWithTournamentByGaps(outcomes: List<OffensiveGenome>): OffensiveGenome {
+    return outcomes.shuffled()
+        .take(TOURNAMENT_PICKS)
+        .map { outcome ->
+            val neighbors = getEuclideanNeighbors(outcome, outcomes)
+            val distance = if (neighbors.contains(null)) {
+                Double.MAX_VALUE
+            } else {
+                neighbors.maxOf { it!!.second }
+            }
+            Pair(outcome, distance)
+        }
+        .maxByOrNull { it.second }!!.first
+}
+
+private fun getEuclideanNeighbors(
+    individual: SimulationOutcome,
+    outcomes: List<SimulationOutcome>
+): List<Pair<SimulationOutcome, Double>?> {
+    val outcomesWithDistances = (outcomes - individual).map {
+        Pair(it, sqrt((individual.profits - it.profits).pow(2) + (individual.risk - it.risk).pow(2)))
+    }.sortedBy { it.second }
+    if (individual == outcomesWithDistances.first().first || individual == outcomesWithDistances.last().first) {
+        val output = outcomesWithDistances.take(1).toMutableList<Pair<SimulationOutcome, Double>?>()
+        output += null
+        return output
+    }
+    return outcomesWithDistances.take(2)
+        .map { Pair(it.first.clone(), it.second) }
+        .toList()
+}
+
+private fun getEuclideanNeighbors(
+    individual: OffensiveGenome,
+    outcomes: List<OffensiveGenome>
+): List<Pair<OffensiveGenome, Double>?> {
+    val outcomesWithDistances = (outcomes - individual).map {
+        Pair(
+            it,
+            sqrt(
+                (individual.profitsWithDefensiveGenome!! - it.profitsWithDefensiveGenome!!).pow(2)
+                        + (individual.riskWithDefensiveGenome!! - it.riskWithDefensiveGenome!!).pow(2)
+            )
+        )
+    }.sortedBy { it.second }
+    if (individual == outcomesWithDistances.first().first || individual == outcomesWithDistances.last().first) {
+        val output = outcomesWithDistances.take(1).toMutableList<Pair<OffensiveGenome, Double>?>()
+        output += null
+        return output
+    }
+    return outcomesWithDistances.take(2).toList()
 }
 
 private fun getMutatedGenomes(genomes: List<Genome>): List<Genome> {

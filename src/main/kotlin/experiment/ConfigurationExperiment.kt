@@ -13,9 +13,11 @@ class ConfigurationExperiment : Experiment("configuration") {
     private val genericHvName = "$name-generic-hv"
     private val genericNsgaName = "$name-generic-nsga2"
     private val genericSpeaName = "$name-generic-spea2"
+    private val genericNtgaName = "$name-generic-ntga2"
     private val coevolutionHvName = "$name-coevolution-hv"
     private val coevolutionNsgaName = "$name-coevolution-nsga2"
     private val coevolutionSpeaName = "$name-coevolution-spea2"
+    private val coevolutionNtgaName = "$name-coevolution-ntga2"
     private val genericGeneticAlgorithmHvPareto = GenericGeneticAlgorithm(
         genericHvName,
         "${logString}No coevolution, HV-Pareto",
@@ -51,6 +53,20 @@ class ConfigurationExperiment : Experiment("configuration") {
         360,
         true,
         SelectionMethod.SPEA2,
+        DataLoader.loadDevelopedData(),
+        DataLoader.loadEmergingData(),
+        DataLoader.loadCrbAndOilData(),
+        DataLoader.loadGoldUsdData(),
+        DataLoader.loadShillerPESP500Ratio(),
+        DataLoader.loadDowToGoldData()
+    )
+    private val genericGeneticAlgorithmNtga2 = GenericGeneticAlgorithm(
+        genericNtgaName,
+        "${logString}No coevolution, NTGA2",
+        listOf(Pair(Date(1, 1, 1988), Date(1, 1, 2018))),
+        360,
+        true,
+        SelectionMethod.NTGA2,
         DataLoader.loadDevelopedData(),
         DataLoader.loadEmergingData(),
         DataLoader.loadCrbAndOilData(),
@@ -100,6 +116,20 @@ class ConfigurationExperiment : Experiment("configuration") {
         DataLoader.loadShillerPESP500Ratio(),
         DataLoader.loadDowToGoldData()
     )
+    private val coevolutionGeneticAlgorithmNtga2 = CoevolutionGeneticAlgorithm(
+        coevolutionNtgaName,
+        "${logString}Coevolution, NTGA2",
+        listOf(Pair(Date(1, 1, 1988), Date(1, 1, 2018))),
+        360,
+        true,
+        SelectionMethod.NTGA2,
+        DataLoader.loadDevelopedData(),
+        DataLoader.loadEmergingData(),
+        DataLoader.loadCrbAndOilData(),
+        DataLoader.loadGoldUsdData(),
+        DataLoader.loadShillerPESP500Ratio(),
+        DataLoader.loadDowToGoldData()
+    )
     private lateinit var purityValues: List<Double>
 
     override fun run() {
@@ -110,20 +140,26 @@ class ConfigurationExperiment : Experiment("configuration") {
             (Runner.runCombining(genericGeneticAlgorithmNsgaII, state[1], RUNS) as GenericGeneticAlgorithmState)
         val genericGeneticAlgorithmSpea2State =
             (Runner.runCombining(genericGeneticAlgorithmSpea2, state[2], RUNS) as GenericGeneticAlgorithmState)
+        val genericGeneticAlgorithmNtga2State =
+            (Runner.runCombining(genericGeneticAlgorithmNtga2, state[3], RUNS) as GenericGeneticAlgorithmState)
         val coevolutionGeneticAlgorithmHvParetoState =
             (Runner.runCombining(
-                coevolutionGeneticAlgorithmHvPareto, state[3], RUNS
+                coevolutionGeneticAlgorithmHvPareto, state[4], RUNS
             ) as CoevolutionGeneticAlgorithmState)
         val coevolutionGeneticAlgorithmNsgaIIState =
-            (Runner.runCombining(coevolutionGeneticAlgorithmNsgaII, state[4], RUNS) as CoevolutionGeneticAlgorithmState)
+            (Runner.runCombining(coevolutionGeneticAlgorithmNsgaII, state[5], RUNS) as CoevolutionGeneticAlgorithmState)
         val coevolutionGeneticAlgorithmSpea2State =
-            (Runner.runCombining(coevolutionGeneticAlgorithmSpea2, state[5], RUNS) as CoevolutionGeneticAlgorithmState)
+            (Runner.runCombining(coevolutionGeneticAlgorithmSpea2, state[6], RUNS) as CoevolutionGeneticAlgorithmState)
+        val coevolutionGeneticAlgorithmNtga2State =
+            (Runner.runCombining(coevolutionGeneticAlgorithmNtga2, state[7], RUNS) as CoevolutionGeneticAlgorithmState)
         genericGeneticAlgorithmHvParetoState.save(genericHvName)
         genericGeneticAlgorithmNsgaIIState.save(genericNsgaName)
         genericGeneticAlgorithmSpea2State.save(genericSpeaName)
+        genericGeneticAlgorithmNtga2State.save(genericNtgaName)
         coevolutionGeneticAlgorithmHvParetoState.save(coevolutionHvName)
         coevolutionGeneticAlgorithmNsgaIIState.save(coevolutionNsgaName)
         coevolutionGeneticAlgorithmSpea2State.save(coevolutionSpeaName)
+        coevolutionGeneticAlgorithmNtga2State.save(coevolutionNtgaName)
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -132,28 +168,33 @@ class ConfigurationExperiment : Experiment("configuration") {
         val geneticAlgorithmOutcomeHv = state[0] as GenericGeneticAlgorithmState
         val geneticAlgorithmOutcomeNsga = state[1] as GenericGeneticAlgorithmState
         val geneticAlgorithmOutcomeSpea2 = state[2] as GenericGeneticAlgorithmState
-        val coevolutionGeneticAlgorithmOutcomeHv = state[3] as CoevolutionGeneticAlgorithmState
-        val coevolutionGeneticAlgorithmOutcomeNsga = state[4] as CoevolutionGeneticAlgorithmState
-        val coevolutionGeneticAlgorithmOutcomeSpea2 = state[5] as CoevolutionGeneticAlgorithmState
+        val geneticAlgorithmOutcomeNtga2 = state[3] as GenericGeneticAlgorithmState
+        val coevolutionGeneticAlgorithmOutcomeHv = state[4] as CoevolutionGeneticAlgorithmState
+        val coevolutionGeneticAlgorithmOutcomeNsga = state[5] as CoevolutionGeneticAlgorithmState
+        val coevolutionGeneticAlgorithmOutcomeSpea2 = state[6] as CoevolutionGeneticAlgorithmState
+        val coevolutionGeneticAlgorithmOutcomeNtga2 = state[7] as CoevolutionGeneticAlgorithmState
 
         val outcomes = mutableListOf(
             geneticAlgorithmOutcomeHv.archive.toList(),
             geneticAlgorithmOutcomeNsga.archive.toList(),
             geneticAlgorithmOutcomeSpea2.archive.toList(),
+            geneticAlgorithmOutcomeNtga2.archive.toList(),
             coevolutionGeneticAlgorithmOutcomeHv.archive.toList(),
             coevolutionGeneticAlgorithmOutcomeNsga.archive.toList(),
-            coevolutionGeneticAlgorithmOutcomeSpea2.archive.toList()
+            coevolutionGeneticAlgorithmOutcomeSpea2.archive.toList(),
+            coevolutionGeneticAlgorithmOutcomeNtga2.archive.toList()
         )
 
         val purityValues = mutableListOf<Double>()
-        val mainFront = outcomes[0] + outcomes[1] + outcomes[2] + outcomes[3] + outcomes[4] + outcomes[5]
+        val mainFront = outcomes[0] + outcomes[1] + outcomes[2] + outcomes[3] + outcomes[4] + outcomes[5] +
+                outcomes[6] + outcomes[7]
         val evaluatedMainFront = paretoEvaluateOffensiveGenomes(mainFront).map {
             SimulationOutcome(
                 it.profitsWithDefensiveGenome!!,
                 it.riskWithDefensiveGenome!!
             )
         }
-        for (i in 0 until 6) {
+        for (i in 0 until 8) {
             purityValues += calculateParetoPurity(outcomes[i].map {
                 SimulationOutcome(
                     it.profitsWithDefensiveGenome!!,
@@ -194,6 +235,10 @@ class ConfigurationExperiment : Experiment("configuration") {
         if (genericGeneticAlgorithmStateSpea == null) {
             genericGeneticAlgorithmStateSpea = genericGeneticAlgorithmSpea2.getEmptyState()
         }
+        var genericGeneticAlgorithmStateNtga = GenericGeneticAlgorithmState.load(genericNtgaName)
+        if (genericGeneticAlgorithmStateNtga == null) {
+            genericGeneticAlgorithmStateNtga = genericGeneticAlgorithmNtga2.getEmptyState()
+        }
         var coevolutionGeneticAlgorithmStateHv = CoevolutionGeneticAlgorithmState.load(coevolutionHvName)
         if (coevolutionGeneticAlgorithmStateHv == null) {
             coevolutionGeneticAlgorithmStateHv = coevolutionGeneticAlgorithmHvPareto.getEmptyState()
@@ -206,13 +251,19 @@ class ConfigurationExperiment : Experiment("configuration") {
         if (coevolutionGeneticAlgorithmStateSpea == null) {
             coevolutionGeneticAlgorithmStateSpea = coevolutionGeneticAlgorithmSpea2.getEmptyState()
         }
+        var coevolutionGeneticAlgorithmStateNtga = CoevolutionGeneticAlgorithmState.load(coevolutionNtgaName)
+        if (coevolutionGeneticAlgorithmStateNtga == null) {
+            coevolutionGeneticAlgorithmStateNtga = coevolutionGeneticAlgorithmNtga2.getEmptyState()
+        }
         return listOf(
             genericGeneticAlgorithmStateHv,
             genericGeneticAlgorithmStateNsga,
             genericGeneticAlgorithmStateSpea,
+            genericGeneticAlgorithmStateNtga,
             coevolutionGeneticAlgorithmStateHv,
             coevolutionGeneticAlgorithmStateNsga,
             coevolutionGeneticAlgorithmStateSpea,
+            coevolutionGeneticAlgorithmStateNtga,
         )
     }
 

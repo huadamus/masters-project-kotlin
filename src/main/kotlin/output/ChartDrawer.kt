@@ -25,11 +25,11 @@ abstract class ChartDrawer(private val chartTitle: String) : JFrame() {
     protected val classicalStrategiesColor = Color(0, 0, 0)
     protected val seriesColors = listOf(
         Color(255, 0, 0),
-        Color(0, 220, 0),
+        Color(0, 170, 0),
         Color(0, 0, 255),
-        Color(170, 80, 40),
-        Color(250, 0, 220),
-        Color(100, 0, 100),
+        Color(255, 0, 205),
+        Color(100, 20, 150),
+        Color(0, 255, 255),
     )
     val shapes = listOf(
         Ellipse2D.Double(-3.0, -3.0, 6.0, 6.0),

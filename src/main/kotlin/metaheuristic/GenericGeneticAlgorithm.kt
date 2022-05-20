@@ -53,13 +53,20 @@ class GenericGeneticAlgorithm(
             archive = paretoEvaluateOffensiveGenomes(archive.toList()).toMutableSet()
             val newPopulation = mutableListOf<OffensiveGenome>()
             population = when (selectionMethod) {
-                SelectionMethod.HV_PARETO -> (newPopulation + getNewGenerationOffensiveGenomesByRankAndVolume(generation))
+                SelectionMethod.HV_PARETO -> (newPopulation + getNewGenerationOffensiveGenomes(generation))
                     .toMutableList()
                     .shuffled()
                 SelectionMethod.NSGA_II -> (newPopulation + getNewGenerationOffensiveGenomesByRankAndVolume(generation))
                     .toMutableList()
                     .shuffled()
                 SelectionMethod.SPEA2 -> (newPopulation + getNewGenerationOffensiveGenomesByStrength(generation))
+                    .toMutableList()
+                    .shuffled()
+                SelectionMethod.NTGA2 -> (newPopulation + getNewGenerationOffensiveGenomesByNtgaMethod(
+                    i,
+                    generation,
+                    archive
+                ))
                     .toMutableList()
                     .shuffled()
             }

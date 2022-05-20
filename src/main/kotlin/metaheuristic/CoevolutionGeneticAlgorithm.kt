@@ -97,7 +97,7 @@ class CoevolutionGeneticAlgorithm(
                                 bestOutcomeSolution.strategyDetailsWithDefensiveGenome
                         }
                     }
-                    SelectionMethod.NSGA_II, SelectionMethod.SPEA2 -> {
+                    SelectionMethod.NSGA_II, SelectionMethod.SPEA2, SelectionMethod.NTGA2 -> {
                         val bestSolutions = paretoEvaluateOffensiveGenomes(
                             listOf(
                                 randomOutcomeSolution,
@@ -169,6 +169,26 @@ class CoevolutionGeneticAlgorithm(
                                 .shuffled()
                     defensiveGenomesPopulation = newDefensivePopulation +
                             getNewGenerationDefensiveGenomesByStrength(defensiveOutcomes).toMutableList()
+                                .shuffled()
+                }
+                SelectionMethod.NTGA2 -> {
+                    offensiveGenomesPopulation = newOffensivePopulation +
+                            getNewGenerationOffensiveGenomesByNtgaMethod(
+                                i,
+                                assignedOffensivePopulation,
+                                archive
+                            ).toMutableList()
+                                .shuffled()
+                    defensiveGenomesPopulation = newDefensivePopulation +
+                            getNewGenerationDefensiveGenomesByNtgaMethod(
+                                i,
+                                defensiveOutcomes,
+                                archive.map {
+                                    val output =
+                                        SimulationOutcome(it.profitsWithDefensiveGenome!!, it.riskWithDefensiveGenome!!)
+                                    output.genome = it.bestDefensiveGenome!!
+                                    output
+                                }).toMutableList()
                                 .shuffled()
                 }
             }

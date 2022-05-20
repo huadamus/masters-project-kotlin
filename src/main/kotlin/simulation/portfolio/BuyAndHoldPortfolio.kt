@@ -39,8 +39,7 @@ open class BuyAndHoldPortfolio(
 
     protected fun manageDevelopedPurchases(date: Date) {
         if (!boughtInitialDeveloped || (!isInRecession(date)
-                    && historicalDataStore.lastShillerSP500PERatio <= 20.0
-                    && date.month % 2 == 0)
+                    && historicalDataStore.lastShillerSP500PERatio <= 20.0)
         ) {
             boughtInitialDeveloped = true
             buyDeveloped(date.copy())
@@ -49,8 +48,7 @@ open class BuyAndHoldPortfolio(
 
     protected fun manageEmergingPurchases(date: Date) {
         if (!boughtInitialEmerging || (!isInRecession(date)
-                    && historicalDataStore.lastShillerSP500PERatio >= 25.0
-                    && date.month % 2 == 0)
+                    && historicalDataStore.lastShillerSP500PERatio >= 25.0)
         ) {
             boughtInitialEmerging = true
             buyEmerging(date.copy())
@@ -59,8 +57,7 @@ open class BuyAndHoldPortfolio(
 
     protected fun manageCrbPurchases(date: Date) {
         if (!boughtInitialCrb || (!isInRecession(date)
-                    && historicalDataStore.lastCrbPrice <= 260.0
-                    && date.month % 2 == 0)
+                    && historicalDataStore.lastCrbPrice <= 260.0)
         ) {
             boughtInitialCrb = true
             buyCrb(date.copy())
@@ -69,8 +66,7 @@ open class BuyAndHoldPortfolio(
 
     protected fun manageGoldPurchases(date: Date) {
         if (!boughtInitialGold || (isInRecession(date)
-                    && historicalDataStore.lastDowToGoldRatio <= 15.0
-                    && date.month % 2 == 0)
+                    && historicalDataStore.lastDowToGoldRatio <= 15.0)
         ) {
             boughtInitialGold = true
             buyGold(date.copy())

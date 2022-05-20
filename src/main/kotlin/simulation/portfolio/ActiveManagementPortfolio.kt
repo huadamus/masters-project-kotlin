@@ -32,33 +32,25 @@ class ActiveManagementPortfolio(
     }
 
     private fun manageDevelopedSales(date: Date) {
-        if (historicalDataStore.lastShillerSP500PERatio > 35.0
-            && date.month % 2 == 0
-        ) {
+        if (historicalDataStore.lastShillerSP500PERatio > 35.0) {
             sellAsset(date, Asset.Type.DEVELOPED)
         }
     }
 
     private fun manageEmergingSales(date: Date) {
-        if (historicalDataStore.lastShillerSP500PERatio < 18.0
-            && date.month % 2 == 0
-        ) {
+        if (historicalDataStore.lastShillerSP500PERatio < 18.0) {
             sellAsset(date, Asset.Type.EMERGING)
         }
     }
 
     private fun manageCrbSales(date: Date) {
-        if (historicalDataStore.lastCrbPrice >= 300.0
-            && date.month % 2 == 0
-        ) {
+        if (historicalDataStore.lastCrbPrice >= 300.0) {
             sellAsset(date, Asset.Type.CRB)
         }
     }
 
     private fun manageGoldSales(date: Date) {
-        if (historicalDataStore.lastDowToGoldRatio > 19.0
-            && date.month % 2 == 0
-        ) {
+        if (historicalDataStore.lastDowToGoldRatio > 19.0) {
             sellAsset(date, Asset.Type.GOLD)
         }
     }
