@@ -14,14 +14,14 @@ import simulation.spacingForSet
 class ConfigurationChartDrawer(private val purityValues: Array<Double>, private val timeValues: Array<Int>) :
     ChartDrawer("Badanie konfiguracji systemu") {
     private val labels = arrayOf(
-        "Gener. AG, sel. hypervolume",
-        "Gener. AG, sel. NSGA-II",
-        "Gener. AG, sel. SPEA2",
-        "Gener. AG, sel. NTGA2",
-        "Koew. AG, sel. hypervolume",
-        "Koew. AG, sel. NSGA-II",
-        "Koew. AG, sel. SPEA2",
-        "Koew. AG, sel. NTGA2",
+        "EA-HV",
+        "NSGA-II",
+        "SPEA2",
+        "NTGA2",
+        "cEA-HV",
+        "cNSGA-II",
+        "cSPEA2",
+        "cNTGA2",
     )
     private var algorithmOutcomes: List<List<SimulationOutcome>>? = null
 
@@ -80,11 +80,11 @@ class ConfigurationChartDrawer(private val purityValues: Array<Double>, private 
         for (i in 0 until plot.getDataset(0).seriesCount) {
             plot.getRendererForDataset(plot.getDataset(0)).setSeriesPaint(i, seriesColors[i % 4])
         }
-        for (i in 0 until plot.getDataset(0).seriesCount / 2 - 1) {
-            plot.getRendererForDataset(plot.getDataset(0)).setSeriesShape(i, shapes[1])
+        for (i in 0 until plot.getDataset(0).seriesCount / 2) {
+            plot.getRendererForDataset(plot.getDataset(0)).setSeriesShape(i, shapes[2])
         }
         for (i in plot.getDataset(0).seriesCount / 2 until plot.getDataset(0).seriesCount) {
-            plot.getRendererForDataset(plot.getDataset(0)).setSeriesShape(i, shapes[0])
+            plot.getRendererForDataset(plot.getDataset(0)).setSeriesShape(i, shapes[3])
         }
         val chartinfo = buildString {
             for (i in 0 until 8) {
@@ -117,7 +117,7 @@ class ConfigurationChartDrawer(private val purityValues: Array<Double>, private 
                                         )
                                     })
                                 )
-                            } Time: ${timeValues[i]}s" +
+                            } Time: ${if(timeValues.size > i) timeValues[i] else "N/A"}s" +
                             System.lineSeparator()
                 )
             }

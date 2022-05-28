@@ -1,6 +1,9 @@
 package experiment
 
+import CROSSOVER_CHANCE
+import MUTATION_CHANCE
 import RUNS
+import TOURNAMENT_PICKS
 import data.DataLoader
 import metaheuristic.GenericGeneticAlgorithm
 import metaheuristic.GenericGeneticAlgorithmState
@@ -24,13 +27,16 @@ class ParametrizationExperiment : Experiment("parametrization") {
                     val name = "parametrization_${
                         realCrossoverChance
                     }_${realMutationChance}_${tournamentPicks}"
+                    CROSSOVER_CHANCE = realCrossoverChance
+                    MUTATION_CHANCE = realMutationChance
+                    TOURNAMENT_PICKS = tournamentPicks
                     val geneticAlgorithm = GenericGeneticAlgorithm(
                         name,
                         "$logString $realCrossoverChance $realMutationChance $tournamentPicks",
                         listOf(Pair(Date(1, 1, 1988), Date(1, 1, 2018))),
                         360,
                         true,
-                        SelectionMethod.HV_PARETO,
+                        SelectionMethod.NTGA2,
                         DataLoader.loadDevelopedData(),
                         DataLoader.loadEmergingData(),
                         DataLoader.loadCrbAndOilData(),
@@ -38,6 +44,7 @@ class ParametrizationExperiment : Experiment("parametrization") {
                         DataLoader.loadShillerPESP500Ratio(),
                         DataLoader.loadDowToGoldData()
                     )
+                    println("Running algorithm for $CROSSOVER_CHANCE $MUTATION_CHANCE $TOURNAMENT_PICKS")
                     (Runner.runCombining(
                         geneticAlgorithm, geneticAlgorithm.getEmptyState(), RUNS
                     ) as GenericGeneticAlgorithmState).save(name)

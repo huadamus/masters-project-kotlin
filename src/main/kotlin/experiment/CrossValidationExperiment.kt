@@ -35,7 +35,7 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
                 trainingPeriods,
                 dataset.first,
                 true,
-                SelectionMethod.NSGA_II,
+                SelectionMethod.NTGA2,
                 DataLoader.loadDevelopedData(),
                 DataLoader.loadEmergingData(),
                 DataLoader.loadCrbAndOilData(),

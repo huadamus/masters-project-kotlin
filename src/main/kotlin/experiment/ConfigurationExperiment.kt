@@ -132,7 +132,7 @@ class ConfigurationExperiment : Experiment("configuration") {
         DataLoader.loadDowToGoldData()
     )
     private lateinit var purityValues: List<Double>
-    private lateinit var timeValues: MutableList<Long>
+    private var timeValues = mutableListOf<Long>()
 
     override fun run() {
         val state = loadState()

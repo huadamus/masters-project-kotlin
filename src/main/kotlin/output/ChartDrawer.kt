@@ -32,9 +32,10 @@ abstract class ChartDrawer(private val chartTitle: String) : JFrame() {
         Color(0, 255, 255),
     )
     val shapes = listOf(
-        Ellipse2D.Double(-3.0, -3.0, 6.0, 6.0),
+        Ellipse2D.Double(-2.0, -2.0, 4.0, 4.0),
         Rectangle(-3, -3, 6, 6),
-        ShapeUtilities.createDiagonalCross(3.0f, 1.0f),
+        ShapeUtilities.createRegularCross(4.0f, 0.5f),
+        ShapeUtilities.createUpTriangle(2.0f)
     )
 
     fun drawChart(
@@ -79,8 +80,8 @@ abstract class ChartDrawer(private val chartTitle: String) : JFrame() {
     private fun createChart(dataset: XYDataset, title: String, constantAxes: Boolean): JFreeChart {
         val chart = ChartFactory.createXYLineChart(
             title,
-            "Ryzyko",
-            "Zwrot",
+            "Największy spadek z miesiąca na miesiąc",
+            "Średnioroczny zwrot",
             dataset,
             PlotOrientation.VERTICAL,
             true,
