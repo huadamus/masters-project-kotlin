@@ -42,7 +42,7 @@ class CrossValidationChartDrawer(private val periods: List<List<Pair<Date, Date>
             plot.getRendererForDataset(plot.getDataset(0)).setSeriesPaint(i, seriesColors[i / 3])
             plot.getRenderer(0).setSeriesShape(i, shapes[0])
             plot.getRendererForDataset(plot.getDataset(0)).setSeriesPaint(i + 1, seriesColors[i / 3])
-            plot.getRenderer(0).setSeriesShape(i + 1, shapes[1])
+            plot.getRenderer(0).setSeriesShape(i + 1, shapes[3])
             plot.getRendererForDataset(plot.getDataset(0)).setSeriesPaint(i + 2, seriesColors[i / 3])
             plot.getRenderer(0).setSeriesShape(i + 2, shapes[2])
         }

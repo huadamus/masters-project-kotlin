@@ -35,11 +35,11 @@ class CrossValidation18to21ChartDrawer : ChartDrawer("Znalezione strategie w okr
 
     override fun setSeriesRendering(chart: JFreeChart, plot: XYPlot) {
         plot.getRendererForDataset(plot.getDataset(0)).setSeriesPaint(0, classicalStrategiesColor)
-        plot.getRenderer(0).setSeriesShape(0, shapes[0])
+        plot.getRenderer(0).setSeriesShape(0, shapes[2])
         //(plot.getRenderer(0) as XYLineAndShapeRenderer).setSeriesLinesVisible(2, false)
         //plot.getRenderer(0).setSeriesVisibleInLegend(seriesIndex, Boolean.FALSE, true)
         plot.getRendererForDataset(plot.getDataset(0)).setSeriesPaint(1, classicalStrategiesColor)
-        plot.getRenderer(0).setSeriesShape(1, shapes[1])
+        plot.getRenderer(0).setSeriesShape(1, shapes[3])
         for (i in 2 until plot.getDataset(0).seriesCount) {
             plot.getRendererForDataset(plot.getDataset(0)).setSeriesPaint(i, seriesColors[i - 2])
             plot.getRenderer(0).setSeriesShape(i, shapes[0])

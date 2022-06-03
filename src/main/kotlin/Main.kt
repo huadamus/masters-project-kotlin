@@ -24,8 +24,8 @@ fun main() {
     //runParametrizationExperiment()
     //runParametrizationSpea2Experiment()
     //runParametrizationNtga2Experiment()
-//    runConfigurationsExperiment()
-    runCrossValidationExperiment()
+    //runConfigurationsExperiment()
+    //runCrossValidationExperiment()
 }
 
 private fun generatePeriods() {

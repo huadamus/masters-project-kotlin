@@ -1,8 +1,5 @@
 package experiment
 
-import simulation.Runner
-import simulation.SimulationOutcome
-import simulation.Simulator
 import RUNS
 import TESTING_PERIODS
 import data.DataLoader
@@ -12,6 +9,7 @@ import model.OffensiveGenome
 import output.CrossValidation18to21ChartDrawer
 import output.CrossValidationChartDrawer
 import output.OutputPrintingManager
+import simulation.*
 
 class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<Date, Date>>>) :
     Experiment("cross_validation") {
@@ -139,6 +137,10 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
                     OutputPrintingManager.getReadableScore(iterationOutcomes[i * 3])
                 }"
             )
+            printParametersTable(
+                iterationOutcomes[0] + iterationOutcomes[3] + iterationOutcomes[6] + iterationOutcomes[9] + iterationOutcomes[12],
+                iterationOutcomes[i * 3]
+            )
             println("${finalTestPeriods[i]} buy-and-hold score: ${iterationOutcomes[i * 3 + 1][0]}")
             println("${finalTestPeriods[i]} active management score: ${iterationOutcomes[i * 3 + 2][0]}")
         }
@@ -146,6 +148,25 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
         showValidationOutcome(tested)
 
         return iterationOutcomes
+    }
+
+    private fun printParametersTable(
+        allIndividuals: List<SimulationOutcome>,
+        individuals: List<SimulationOutcome>
+    ) {
+        val mappedIndividuals = individuals.map { Pair(it.profits, it.risk) }
+        println(
+            "Purity: ${
+                calculateParetoPurity(
+                    individuals,
+                    paretoEvaluate(allIndividuals)
+                )
+            }, PFS: ${individuals.size}, GD: ${invertedGenerationalDistanceForSet(mappedIndividuals)}, HV: ${
+                hvParetoFitnessFunctionForSet(
+                    mappedIndividuals
+                )
+            }, Spacing: ${spacingForSet(mappedIndividuals)}"
+        )
     }
 
     private fun showValidationOutcome(archive: List<List<OffensiveGenome>>) {
