@@ -7,8 +7,8 @@ import experiment.*
 import java.io.File
 
 //metaheuristic
-const val POPULATION_SIZE = 100
-const val GENERATIONS = 500
+const val POPULATION_SIZE = 16
+const val GENERATIONS = 1
 var CROSSOVER_CHANCE = 0.80
 var MUTATION_CHANCE = 0.09
 var TOURNAMENT_PICKS = 8
@@ -30,7 +30,7 @@ fun log(log: String) {
     writer.append(log + System.lineSeparator())
 }
 
-fun main() {
+fun main(args: Array<String>) {
     runParametrizationExperiment()
     //runConfigurationsExperiment()
     //runCrossValidationExperiment()
