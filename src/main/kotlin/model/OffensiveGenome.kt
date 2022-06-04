@@ -1,6 +1,7 @@
 package model
 
 import CROSSOVER_CHANCE
+import GAUSS_MUTATION
 import MUTATION_CHANCE
 import simulation.hvParetoFitnessFunction
 import kotlin.random.Random
@@ -108,12 +109,30 @@ class OffensiveGenome(
     override fun mutate() {
         val choiceParameterRoll = Random.nextDouble()
         if (choiceParameterRoll <= MUTATION_CHANCE) {
-            choiceParameter = Random.nextDouble()
+            choiceParameter = if(GAUSS_MUTATION) {
+                java.util.Random().nextGaussian(
+                    choiceParameter, 0.3
+                )
+            } else {
+                Random.nextDouble()
+            }
         }
         for (parameter in Parameter.values()) {
             val roll = Random.nextDouble()
             if (roll <= MUTATION_CHANCE) {
-                parameters[parameter] = Random.nextDouble()
+                if(GAUSS_MUTATION) {
+                    val newParameterValue = java.util.Random().nextGaussian(
+                        parameters[parameter]!!, 0.3
+                    )
+                    parameters[parameter] =
+                        maxOf(
+                            0.0, minOf(
+                                1.0, newParameterValue
+                            )
+                        )
+                } else {
+                    parameters[parameter] = Random.nextDouble()
+                }
             }
         }
     }

@@ -1,6 +1,7 @@
 package model
 
 import CROSSOVER_CHANCE
+import GAUSS_MUTATION
 import MUTATION_CHANCE
 import java.io.Serializable
 import kotlin.random.Random
@@ -73,7 +74,19 @@ open class Genome(protected val parameters: MutableMap<Parameter, Double>, val p
         for (parameter in Parameter.values()) {
             val roll = Random.nextDouble()
             if (roll <= MUTATION_CHANCE) {
-                parameters[parameter] = Random.nextDouble()
+                if (GAUSS_MUTATION) {
+                    val newParameterValue = java.util.Random().nextGaussian(
+                        parameters[parameter]!!, 0.3
+                    )
+                    parameters[parameter] =
+                        maxOf(
+                            0.0, minOf(
+                                1.0, newParameterValue
+                            )
+                        )
+                } else {
+                    parameters[parameter] = Random.nextDouble()
+                }
             }
         }
     }

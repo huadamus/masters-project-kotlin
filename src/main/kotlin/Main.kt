@@ -7,19 +7,20 @@ import experiment.*
 import java.io.File
 
 //metaheuristic
-const val POPULATION_SIZE = 16
-const val GENERATIONS = 1
+const val POPULATION_SIZE = 100
+const val GENERATIONS = 2000
 var CROSSOVER_CHANCE = 0.80
 var MUTATION_CHANCE = 0.09
-var TOURNAMENT_PICKS = 8
-var SPEA2_NEAREST_DISTANCE = 5
-var NTGA2_GS_GENERATIONS = 11
+var TOURNAMENT_PICKS = 16
+var SPEA2_NEAREST_DISTANCE = 8
+var NTGA2_GS_GENERATIONS = 15
 const val ELITISM = 0
+const val GAUSS_MUTATION = true
 
 //simulation
 val CROSS_VALIDATION_DATASET = CROSS_VALIDATION_DATASET_72_72
 const val TESTING_PERIODS = 1
-const val RUNS = 2
+const val RUNS = 3
 
 //technical
 val logFile = File("results/log.txt")
@@ -31,7 +32,10 @@ fun log(log: String) {
 }
 
 fun main(args: Array<String>) {
-    runParametrizationExperiment()
+    val exp = GaussTestExperiment()
+    exp.run()
+    exp.calculateAndPrintOutcomes()
+    //runParametrizationExperiment()
     //runConfigurationsExperiment()
     //runCrossValidationExperiment()
     writer.close()
@@ -52,12 +56,12 @@ private fun runParametrizationExperiment() {
 
 private fun runConfigurationsExperiment() {
     val configurationExperiment = ConfigurationExperiment()
-    //configurationExperiment.run()
+    configurationExperiment.run()
     configurationExperiment.showResults()
 }
 
 private fun runCrossValidationExperiment() {
     val crossValidationExperiment = CrossValidationExperiment(CROSS_VALIDATION_DATASET)
-    //crossValidationExperiment.run()
+    crossValidationExperiment.run()
     crossValidationExperiment.showResults()
 }
