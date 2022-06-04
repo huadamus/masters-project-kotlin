@@ -19,6 +19,7 @@ class ConfigurationExperiment : Experiment("configuration") {
     private val coevolutionNsgaName = "$name-coevolution-nsga2"
     private val coevolutionSpeaName = "$name-coevolution-spea2"
     private val coevolutionNtgaName = "$name-coevolution-ntga2"
+    private val moeaDName = "$name-moead"
     private val genericGeneticAlgorithmHvPareto = GenericGeneticAlgorithm(
         genericHvName,
         "${logString}No coevolution, HV-Pareto",
@@ -131,6 +132,19 @@ class ConfigurationExperiment : Experiment("configuration") {
         DataLoader.loadShillerPESP500Ratio(),
         DataLoader.loadDowToGoldData()
     )
+    private val moeaDAlgorithm = MoeaDAlgorithm(
+        moeaDName,
+        "${logString}MOEA/D",
+        listOf(Pair(Date(1, 1, 1988), Date(1, 1, 2018))),
+        360,
+        true,
+        DataLoader.loadDevelopedData(),
+        DataLoader.loadEmergingData(),
+        DataLoader.loadCrbAndOilData(),
+        DataLoader.loadGoldUsdData(),
+        DataLoader.loadShillerPESP500Ratio(),
+        DataLoader.loadDowToGoldData()
+    )
     private lateinit var purityValues: List<Double>
     private var timeValues = mutableListOf<Long>()
 
@@ -145,6 +159,7 @@ class ConfigurationExperiment : Experiment("configuration") {
         lateinit var coevolutionGeneticAlgorithmNsgaIIState: CoevolutionGeneticAlgorithmState
         lateinit var coevolutionGeneticAlgorithmSpea2State: CoevolutionGeneticAlgorithmState
         lateinit var coevolutionGeneticAlgorithmNtga2State: CoevolutionGeneticAlgorithmState
+        lateinit var moeaDState: GenericGeneticAlgorithmState
         timeValues += measureTimeMillis {
             genericGeneticAlgorithmHvParetoState =
                 (Runner.runCombining(genericGeneticAlgorithmHvPareto, state[0], RUNS) as GenericGeneticAlgorithmState)
@@ -184,6 +199,11 @@ class ConfigurationExperiment : Experiment("configuration") {
                 coevolutionGeneticAlgorithmNtga2, state[7], RUNS
             ) as CoevolutionGeneticAlgorithmState)
         } / 1000
+        timeValues += measureTimeMillis {
+            moeaDState = (Runner.runCombining(
+                moeaDAlgorithm, state[8], RUNS
+            ) as GenericGeneticAlgorithmState)
+        } / 1000
         genericGeneticAlgorithmHvParetoState.save(genericHvName)
         genericGeneticAlgorithmNsgaIIState.save(genericNsgaName)
         genericGeneticAlgorithmSpea2State.save(genericSpeaName)
@@ -192,6 +212,7 @@ class ConfigurationExperiment : Experiment("configuration") {
         coevolutionGeneticAlgorithmNsgaIIState.save(coevolutionNsgaName)
         coevolutionGeneticAlgorithmSpea2State.save(coevolutionSpeaName)
         coevolutionGeneticAlgorithmNtga2State.save(coevolutionNtgaName)
+        moeaDState.save(moeaDName)
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -205,6 +226,7 @@ class ConfigurationExperiment : Experiment("configuration") {
         val coevolutionGeneticAlgorithmOutcomeNsga = state[5] as CoevolutionGeneticAlgorithmState
         val coevolutionGeneticAlgorithmOutcomeSpea2 = state[6] as CoevolutionGeneticAlgorithmState
         val coevolutionGeneticAlgorithmOutcomeNtga2 = state[7] as CoevolutionGeneticAlgorithmState
+        val moeaDOutcome = state[8] as GenericGeneticAlgorithmState
 
         val outcomes = mutableListOf(
             geneticAlgorithmOutcomeHv.archive.toList(),
@@ -214,19 +236,20 @@ class ConfigurationExperiment : Experiment("configuration") {
             coevolutionGeneticAlgorithmOutcomeHv.archive.toList(),
             coevolutionGeneticAlgorithmOutcomeNsga.archive.toList(),
             coevolutionGeneticAlgorithmOutcomeSpea2.archive.toList(),
-            coevolutionGeneticAlgorithmOutcomeNtga2.archive.toList()
+            coevolutionGeneticAlgorithmOutcomeNtga2.archive.toList(),
+            moeaDOutcome.archive.toList()
         )
 
         val purityValues = mutableListOf<Double>()
         val mainFront = outcomes[0] + outcomes[1] + outcomes[2] + outcomes[3] + outcomes[4] + outcomes[5] +
-                outcomes[6] + outcomes[7]
+                outcomes[6] + outcomes[7] + outcomes[8]
         val evaluatedMainFront = paretoEvaluateOffensiveGenomes(mainFront).map {
             SimulationOutcome(
                 it.profitsWithDefensiveGenome!!,
                 it.riskWithDefensiveGenome!!
             )
         }
-        for (i in 0 until 8) {
+        for (i in outcomes.indices) {
             purityValues += calculateParetoPurity(outcomes[i].map {
                 SimulationOutcome(
                     it.profitsWithDefensiveGenome!!,
@@ -292,6 +315,10 @@ class ConfigurationExperiment : Experiment("configuration") {
         if (coevolutionGeneticAlgorithmStateNtga == null) {
             coevolutionGeneticAlgorithmStateNtga = coevolutionGeneticAlgorithmNtga2.getEmptyState()
         }
+        var moeaDState = GenericGeneticAlgorithmState.load(moeaDName)
+        if (moeaDState == null) {
+            moeaDState = moeaDAlgorithm.getEmptyState()
+        }
         return listOf(
             genericGeneticAlgorithmStateHv,
             genericGeneticAlgorithmStateNsga,
@@ -301,6 +328,7 @@ class ConfigurationExperiment : Experiment("configuration") {
             coevolutionGeneticAlgorithmStateNsga,
             coevolutionGeneticAlgorithmStateSpea,
             coevolutionGeneticAlgorithmStateNtga,
+            moeaDState,
         )
     }
 

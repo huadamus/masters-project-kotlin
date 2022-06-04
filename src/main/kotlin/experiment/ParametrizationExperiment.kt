@@ -1,6 +1,7 @@
 package experiment
 
 import CROSSOVER_CHANCE
+import MOEA_D_T
 import MUTATION_CHANCE
 import NTGA2_GS_GENERATIONS
 import RUNS
@@ -10,6 +11,7 @@ import data.DataLoader
 import log
 import metaheuristic.GenericGeneticAlgorithm
 import metaheuristic.GenericGeneticAlgorithmState
+import metaheuristic.MoeaDAlgorithm
 import metaheuristic.SelectionMethod
 import model.Date
 import simulation.Runner
@@ -21,13 +23,15 @@ class ParametrizationExperiment : Experiment("parametrization") {
         SelectionMethod.HV_PARETO,
         SelectionMethod.NSGA_II,
         SelectionMethod.SPEA2,
-        SelectionMethod.NTGA2
+        SelectionMethod.NTGA2,
+        null
     )
     private val crossoverChanceSet = IntRange(70, 90) step 5
-    private val mutationChanceSet = IntRange(6, 12) step 2
-    private val tournamentPicksSet = IntRange(8, 24) step 2
+    private val mutationChanceSet = IntRange(6, 12) step 3
+    private val tournamentPicksSet = IntRange(8, 24) step 4
     private val spea2NearestDistanceParameterSet = IntRange(1, 11) step 2
     private val ntga2GsGenerationsSet = IntRange(1, 51) step 10
+    private val moeaDTSet = IntRange(2, 14) step 3
 
     override fun run() {
         for (method in methodsSet) {
@@ -35,64 +39,19 @@ class ParametrizationExperiment : Experiment("parametrization") {
                 val realCrossoverChance = crossoverChance.toDouble() / 100.0
                 for (mutationChance in mutationChanceSet) {
                     val realMutationChance = mutationChance.toDouble() / 100.0
-                    for (tournamentPicks in tournamentPicksSet) {
-                        var name = "parametrization_${method}_${
-                            realCrossoverChance
-                        }_${realMutationChance}_${tournamentPicks}"
-                        CROSSOVER_CHANCE = realCrossoverChance
-                        MUTATION_CHANCE = realMutationChance
-                        TOURNAMENT_PICKS = tournamentPicks
-                        when (method) {
-                            SelectionMethod.HV_PARETO, SelectionMethod.NSGA_II -> {
-                                val geneticAlgorithm = GenericGeneticAlgorithm(
-                                    name,
-                                    "$logString $method $realCrossoverChance $realMutationChance $tournamentPicks",
-                                    listOf(Pair(Date(1, 1, 1988), Date(1, 1, 2018))),
-                                    360,
-                                    true,
-                                    SelectionMethod.NTGA2,
-                                    DataLoader.loadDevelopedData(),
-                                    DataLoader.loadEmergingData(),
-                                    DataLoader.loadCrbAndOilData(),
-                                    DataLoader.loadGoldUsdData(),
-                                    DataLoader.loadShillerPESP500Ratio(),
-                                    DataLoader.loadDowToGoldData()
-                                )
-                                println("Running algorithm for $method $CROSSOVER_CHANCE $MUTATION_CHANCE $TOURNAMENT_PICKS")
-                                (Runner.runCombining(
-                                    geneticAlgorithm, geneticAlgorithm.getEmptyState(), RUNS
-                                ) as GenericGeneticAlgorithmState).save(name)
-                            }
-                            SelectionMethod.SPEA2 -> {
-                                for (nearestDistanceParameter in spea2NearestDistanceParameterSet) {
-                                    SPEA2_NEAREST_DISTANCE = nearestDistanceParameter
-                                    name += "_${nearestDistanceParameter}"
+                    if (method != null) {
+                        for (tournamentPicks in tournamentPicksSet) {
+                            var name = "parametrization_${method}_${
+                                realCrossoverChance
+                            }_${realMutationChance}_${tournamentPicks}"
+                            CROSSOVER_CHANCE = realCrossoverChance
+                            MUTATION_CHANCE = realMutationChance
+                            TOURNAMENT_PICKS = tournamentPicks
+                            when (method) {
+                                SelectionMethod.HV_PARETO, SelectionMethod.NSGA_II -> {
                                     val geneticAlgorithm = GenericGeneticAlgorithm(
                                         name,
-                                        "Parameterization SPEA2 $crossoverChance $mutationChance $tournamentPicks $nearestDistanceParameter",
-                                        listOf(Pair(Date(1, 1, 1988), Date(1, 1, 2018))),
-                                        360,
-                                        true,
-                                        SelectionMethod.SPEA2,
-                                        DataLoader.loadDevelopedData(),
-                                        DataLoader.loadEmergingData(),
-                                        DataLoader.loadCrbAndOilData(),
-                                        DataLoader.loadGoldUsdData(),
-                                        DataLoader.loadShillerPESP500Ratio(),
-                                        DataLoader.loadDowToGoldData()
-                                    )
-                                    (Runner.runCombining(
-                                        geneticAlgorithm, geneticAlgorithm.getEmptyState(), RUNS
-                                    ) as GenericGeneticAlgorithmState).save(name)
-                                }
-                            }
-                            SelectionMethod.NTGA2 -> {
-                                for (gsGenerations in ntga2GsGenerationsSet) {
-                                    NTGA2_GS_GENERATIONS = gsGenerations
-                                    name += "_${gsGenerations}"
-                                    val geneticAlgorithm = GenericGeneticAlgorithm(
-                                        name,
-                                        "Parameterization NTGA2 $crossoverChance $mutationChance $tournamentPicks $gsGenerations",
+                                        "$logString $method $realCrossoverChance $realMutationChance $tournamentPicks",
                                         listOf(Pair(Date(1, 1, 1988), Date(1, 1, 2018))),
                                         360,
                                         true,
@@ -104,11 +63,83 @@ class ParametrizationExperiment : Experiment("parametrization") {
                                         DataLoader.loadShillerPESP500Ratio(),
                                         DataLoader.loadDowToGoldData()
                                     )
+                                    println("Running algorithm for $method $CROSSOVER_CHANCE $MUTATION_CHANCE $TOURNAMENT_PICKS")
                                     (Runner.runCombining(
                                         geneticAlgorithm, geneticAlgorithm.getEmptyState(), RUNS
                                     ) as GenericGeneticAlgorithmState).save(name)
                                 }
+                                SelectionMethod.SPEA2 -> {
+                                    for (nearestDistanceParameter in spea2NearestDistanceParameterSet) {
+                                        SPEA2_NEAREST_DISTANCE = nearestDistanceParameter
+                                        name += "_${nearestDistanceParameter}"
+                                        val geneticAlgorithm = GenericGeneticAlgorithm(
+                                            name,
+                                            "Parameterization SPEA2 $crossoverChance $mutationChance $tournamentPicks $nearestDistanceParameter",
+                                            listOf(Pair(Date(1, 1, 1988), Date(1, 1, 2018))),
+                                            360,
+                                            true,
+                                            SelectionMethod.SPEA2,
+                                            DataLoader.loadDevelopedData(),
+                                            DataLoader.loadEmergingData(),
+                                            DataLoader.loadCrbAndOilData(),
+                                            DataLoader.loadGoldUsdData(),
+                                            DataLoader.loadShillerPESP500Ratio(),
+                                            DataLoader.loadDowToGoldData()
+                                        )
+                                        (Runner.runCombining(
+                                            geneticAlgorithm, geneticAlgorithm.getEmptyState(), RUNS
+                                        ) as GenericGeneticAlgorithmState).save(name)
+                                    }
+                                }
+                                SelectionMethod.NTGA2 -> {
+                                    for (gsGenerations in ntga2GsGenerationsSet) {
+                                        NTGA2_GS_GENERATIONS = gsGenerations
+                                        name += "_${gsGenerations}"
+                                        val geneticAlgorithm = GenericGeneticAlgorithm(
+                                            name,
+                                            "Parameterization NTGA2 $crossoverChance $mutationChance $tournamentPicks $gsGenerations",
+                                            listOf(Pair(Date(1, 1, 1988), Date(1, 1, 2018))),
+                                            360,
+                                            true,
+                                            SelectionMethod.NTGA2,
+                                            DataLoader.loadDevelopedData(),
+                                            DataLoader.loadEmergingData(),
+                                            DataLoader.loadCrbAndOilData(),
+                                            DataLoader.loadGoldUsdData(),
+                                            DataLoader.loadShillerPESP500Ratio(),
+                                            DataLoader.loadDowToGoldData()
+                                        )
+                                        (Runner.runCombining(
+                                            geneticAlgorithm, geneticAlgorithm.getEmptyState(), RUNS
+                                        ) as GenericGeneticAlgorithmState).save(name)
+                                    }
+                                }
                             }
+                        }
+                    } else {
+                        for (moeaDT in moeaDTSet) {
+                            val name = "parametrization_moead_${
+                                realCrossoverChance
+                            }_${realMutationChance}_${moeaDT}"
+                            CROSSOVER_CHANCE = realCrossoverChance
+                            MUTATION_CHANCE = realMutationChance
+                            MOEA_D_T = moeaDT
+                            val algorithm = MoeaDAlgorithm(
+                                name,
+                                "Parameterization MOEA/D $crossoverChance $mutationChance $moeaDT",
+                                listOf(Pair(Date(1, 1, 1988), Date(1, 1, 2018))),
+                                360,
+                                true,
+                                DataLoader.loadDevelopedData(),
+                                DataLoader.loadEmergingData(),
+                                DataLoader.loadCrbAndOilData(),
+                                DataLoader.loadGoldUsdData(),
+                                DataLoader.loadShillerPESP500Ratio(),
+                                DataLoader.loadDowToGoldData()
+                            )
+                            (Runner.runCombining(
+                                algorithm, algorithm.getEmptyState(), RUNS
+                            ) as GenericGeneticAlgorithmState).save(name)
                         }
                     }
                 }
@@ -123,41 +154,56 @@ class ParametrizationExperiment : Experiment("parametrization") {
                 val realCrossoverChance = crossoverChance.toDouble() / 100.0
                 for (mutationChance in mutationChanceSet) {
                     val realMutationChance = mutationChance.toDouble() / 100.0
-                    for (tournamentPicks in tournamentPicksSet) {
-                        var name =
-                            "parametrization_${method}_${realCrossoverChance}_${realMutationChance}_${tournamentPicks}"
-                        when (method) {
-                            SelectionMethod.HV_PARETO, SelectionMethod.NSGA_II ->
-                                results += Result(
-                                    realCrossoverChance,
-                                    realMutationChance,
-                                    tournamentPicks,
-                                    loadState(name)
-                                )
-                            SelectionMethod.SPEA2 -> {
-                                for (nearestDistanceParameter in spea2NearestDistanceParameterSet) {
-                                    name += "_${nearestDistanceParameter}"
-                                    results += Spea2Result(
+                    if(method != null) {
+                        for (tournamentPicks in tournamentPicksSet) {
+                            var name =
+                                "parametrization_${method}_${realCrossoverChance}_${realMutationChance}_${tournamentPicks}"
+                            when (method) {
+                                SelectionMethod.HV_PARETO, SelectionMethod.NSGA_II ->
+                                    results += Result(
                                         realCrossoverChance,
                                         realMutationChance,
                                         tournamentPicks,
-                                        nearestDistanceParameter,
                                         loadState(name)
                                     )
+                                SelectionMethod.SPEA2 -> {
+                                    for (nearestDistanceParameter in spea2NearestDistanceParameterSet) {
+                                        name += "_${nearestDistanceParameter}"
+                                        results += Spea2Result(
+                                            realCrossoverChance,
+                                            realMutationChance,
+                                            tournamentPicks,
+                                            nearestDistanceParameter,
+                                            loadState(name)
+                                        )
+                                    }
+                                }
+                                SelectionMethod.NTGA2 -> {
+                                    for (gsGenerations in ntga2GsGenerationsSet) {
+                                        name += "_${gsGenerations}"
+                                        results += Ntga2Result(
+                                            realCrossoverChance,
+                                            realMutationChance,
+                                            tournamentPicks,
+                                            gsGenerations,
+                                            loadState(name)
+                                        )
+                                    }
                                 }
                             }
-                            SelectionMethod.NTGA2 -> {
-                                for (gsGenerations in ntga2GsGenerationsSet) {
-                                    name += "_${gsGenerations}"
-                                    results += Ntga2Result(
-                                        realCrossoverChance,
-                                        realMutationChance,
-                                        tournamentPicks,
-                                        gsGenerations,
-                                        loadState(name)
-                                    )
-                                }
-                            }
+                        }
+                    } else {
+                        for (moeaDT in moeaDTSet) {
+                            val name = "parametrization_moead_${
+                                realCrossoverChance
+                            }_${realMutationChance}_${moeaDT}"
+                            results += Ntga2Result(
+                                realCrossoverChance,
+                                realMutationChance,
+                                -1,
+                                moeaDT,
+                                loadState(name)
+                            )
                         }
                     }
                 }
@@ -227,6 +273,19 @@ class ParametrizationExperiment : Experiment("parametrization") {
 
         override fun toString(): String {
             return super.toString() + " | $gsGenerations"
+        }
+    }
+
+    class MoeaDResult(
+        crossoverChance: Double,
+        mutationChance: Double,
+        tournamentPicks: Int,
+        private val t: Int,
+        state: GenericGeneticAlgorithmState
+    ) : Result(crossoverChance, mutationChance, tournamentPicks, state) {
+
+        override fun toString(): String {
+            return super.toString() + " | $t"
         }
     }
 

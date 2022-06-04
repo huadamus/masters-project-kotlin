@@ -66,8 +66,7 @@ class GenericGeneticAlgorithm(
                     i,
                     generation,
                     archive
-                ))
-                    .toMutableList()
+                )).toMutableList()
                     .shuffled()
             }
         }

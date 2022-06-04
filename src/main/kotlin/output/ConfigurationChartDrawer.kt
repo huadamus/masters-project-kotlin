@@ -22,14 +22,15 @@ class ConfigurationChartDrawer(private val purityValues: Array<Double>, private 
         "cNSGA-II",
         "cSPEA2",
         "cNTGA2",
+        "MOEA/D",
     )
     private var algorithmOutcomes: List<List<SimulationOutcome>>? = null
 
     override fun createDataset(algorithmOutcomes: List<List<SimulationOutcome>>): XYDataset {
         this.algorithmOutcomes = algorithmOutcomes
-        if (algorithmOutcomes.size != 8) {
+        if (algorithmOutcomes.size != 9) {
             throw Exception(
-                "This chart drawer supports 8 algorithm outcomes"
+                "This chart drawer supports 9 algorithm outcomes"
             )
         }
         val dataset = XYSeriesCollection()
@@ -73,6 +74,11 @@ class ConfigurationChartDrawer(private val purityValues: Array<Double>, private 
             coevolutionNtga2Series.add(outcome.risk, outcome.profits)
         }
         dataset.addSeries(coevolutionNtga2Series)
+        val moeaDSeries = XYSeries(labels[8])
+        for (outcome in algorithmOutcomes[8]) {
+            moeaDSeries.add(outcome.risk, outcome.profits)
+        }
+        dataset.addSeries(moeaDSeries)
         return dataset
     }
 
@@ -86,8 +92,10 @@ class ConfigurationChartDrawer(private val purityValues: Array<Double>, private 
         for (i in plot.getDataset(0).seriesCount / 2 until plot.getDataset(0).seriesCount) {
             plot.getRendererForDataset(plot.getDataset(0)).setSeriesShape(i, shapes[3])
         }
+        plot.getRendererForDataset(plot.getDataset(0)).setSeriesShape(8, shapes[0])
+        plot.getRendererForDataset(plot.getDataset(0)).setSeriesPaint(8, classicalStrategiesColor)
         val chartinfo = buildString {
-            for (i in 0 until 8) {
+            for (i in 0 until 9) {
                 append(
                     "${labels[i]} - Purity: ${"%.3f".format(purityValues[i])}, Pareto Front size: ${algorithmOutcomes!![i].size}, " +
                             "Inverted Generational Distance: ${
