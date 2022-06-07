@@ -11,7 +11,7 @@ import kotlin.system.measureTimeMillis
 //metaheuristic
 const val POPULATION_SIZE = 100
 const val MOEA_D_VECTORS_COUNT = 100
-const val GENERATIONS = 2
+const val GENERATIONS = 2500
 var CROSSOVER_CHANCE = 0.80
 var MUTATION_CHANCE = 0.09
 var TOURNAMENT_PICKS = 16
@@ -30,7 +30,7 @@ val moeaDConfigurationParameters = listOf(0.80, 0.10)
 //simulation
 val CROSS_VALIDATION_DATASET = CROSS_VALIDATION_DATASET_72_72
 const val TESTING_PERIODS = 2
-const val RUNS = 2
+const val RUNS = 1
 
 //technical
 val logFile = File("results/log.txt")
@@ -54,8 +54,9 @@ fun main(args: Array<String>) {
         //runGaussMutationExperiment()
         //log("conf")
         //runConfigurationsExperiment()
+        runConfigurationsTestExperiment()
         //runCrossValidationExperiment()
-        measureMaxSp500Falls()
+        //measureMaxSp500Falls()
     }
     log("Total time: ${time / 1000}s")
     writer.close()
@@ -82,13 +83,19 @@ private fun runGaussMutationExperiment() {
 
 private fun runConfigurationsExperiment() {
     val configurationExperiment = ConfigurationExperiment()
-    //configurationExperiment.run()
+    configurationExperiment.run()
+    configurationExperiment.showResults()
+}
+
+private fun runConfigurationsTestExperiment() {
+    val configurationExperiment = ConfigurationTestExperiment()
+    configurationExperiment.run()
     configurationExperiment.showResults()
 }
 
 private fun runCrossValidationExperiment() {
     val crossValidationExperiment = CrossValidationExperiment(CROSS_VALIDATION_DATASET)
-    crossValidationExperiment.run()
+    //crossValidationExperiment.run()
     crossValidationExperiment.showResults()
 }
 

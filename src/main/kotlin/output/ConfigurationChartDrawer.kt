@@ -15,19 +15,20 @@ class ConfigurationChartDrawer(private val purityValues: Array<Double>, private 
         "NSGA-II",
         "SPEA2",
         "NTGA2",
+        "MOEA/D",
         "cEA-HV",
         "cNSGA-II",
         "cSPEA2",
         "cNTGA2",
-        "MOEA/D",
+        "cMOEA/D",
     )
     private var algorithmOutcomes: List<List<SimulationOutcome>>? = null
 
     override fun createDataset(algorithmOutcomes: List<List<SimulationOutcome>>): XYDataset {
         this.algorithmOutcomes = algorithmOutcomes
-        if (algorithmOutcomes.size != 9) {
+        if (algorithmOutcomes.size != 10) {
             throw Exception(
-                "This chart drawer supports 9 algorithm outcomes"
+                "This chart drawer supports 10 algorithm outcomes"
             )
         }
         val dataset = XYSeriesCollection()
@@ -51,37 +52,42 @@ class ConfigurationChartDrawer(private val purityValues: Array<Double>, private 
             noCoevolutionNtga2Series.add(outcome.risk, outcome.profits)
         }
         dataset.addSeries(noCoevolutionNtga2Series)
-        val coevolutionHvParetoSeries = XYSeries(labels[4])
+        val moeaDSeries = XYSeries(labels[4])
         for (outcome in algorithmOutcomes[4]) {
-            coevolutionHvParetoSeries.add(outcome.risk, outcome.profits)
-        }
-        dataset.addSeries(coevolutionHvParetoSeries)
-        val coevolutionNsgaIISeries = XYSeries(labels[5])
-        for (outcome in algorithmOutcomes[5]) {
-            coevolutionNsgaIISeries.add(outcome.risk, outcome.profits)
-        }
-        dataset.addSeries(coevolutionNsgaIISeries)
-        val coevolutionSpea2Series = XYSeries(labels[6])
-        for (outcome in algorithmOutcomes[6]) {
-            coevolutionSpea2Series.add(outcome.risk, outcome.profits)
-        }
-        dataset.addSeries(coevolutionSpea2Series)
-        val coevolutionNtga2Series = XYSeries(labels[7])
-        for (outcome in algorithmOutcomes[7]) {
-            coevolutionNtga2Series.add(outcome.risk, outcome.profits)
-        }
-        dataset.addSeries(coevolutionNtga2Series)
-        val moeaDSeries = XYSeries(labels[8])
-        for (outcome in algorithmOutcomes[8]) {
             moeaDSeries.add(outcome.risk, outcome.profits)
         }
         dataset.addSeries(moeaDSeries)
+        val coevolutionHvParetoSeries = XYSeries(labels[5])
+        for (outcome in algorithmOutcomes[5]) {
+            coevolutionHvParetoSeries.add(outcome.risk, outcome.profits)
+        }
+        dataset.addSeries(coevolutionHvParetoSeries)
+        val coevolutionNsgaIISeries = XYSeries(labels[6])
+        for (outcome in algorithmOutcomes[6]) {
+            coevolutionNsgaIISeries.add(outcome.risk, outcome.profits)
+        }
+        dataset.addSeries(coevolutionNsgaIISeries)
+        val coevolutionSpea2Series = XYSeries(labels[7])
+        for (outcome in algorithmOutcomes[7]) {
+            coevolutionSpea2Series.add(outcome.risk, outcome.profits)
+        }
+        dataset.addSeries(coevolutionSpea2Series)
+        val coevolutionNtga2Series = XYSeries(labels[8])
+        for (outcome in algorithmOutcomes[8]) {
+            coevolutionNtga2Series.add(outcome.risk, outcome.profits)
+        }
+        dataset.addSeries(coevolutionNtga2Series)
+        val coevolutionMoeaDSeries = XYSeries(labels[9])
+        for (outcome in algorithmOutcomes[9]) {
+            coevolutionMoeaDSeries.add(outcome.risk, outcome.profits)
+        }
+        dataset.addSeries(coevolutionMoeaDSeries)
         return dataset
     }
 
     override fun setSeriesRendering(chart: JFreeChart, plot: XYPlot) {
         for (i in 0 until plot.getDataset(0).seriesCount) {
-            plot.getRendererForDataset(plot.getDataset(0)).setSeriesPaint(i, seriesColors[i % 4])
+            plot.getRendererForDataset(plot.getDataset(0)).setSeriesPaint(i, seriesColors[i % 5])
         }
         for (i in 0 until plot.getDataset(0).seriesCount / 2) {
             plot.getRendererForDataset(plot.getDataset(0)).setSeriesShape(i, shapes[2])
@@ -89,7 +95,5 @@ class ConfigurationChartDrawer(private val purityValues: Array<Double>, private 
         for (i in plot.getDataset(0).seriesCount / 2 until plot.getDataset(0).seriesCount) {
             plot.getRendererForDataset(plot.getDataset(0)).setSeriesShape(i, shapes[3])
         }
-        plot.getRendererForDataset(plot.getDataset(0)).setSeriesShape(8, shapes[0])
-        plot.getRendererForDataset(plot.getDataset(0)).setSeriesPaint(8, classicalStrategiesColor)
     }
 }

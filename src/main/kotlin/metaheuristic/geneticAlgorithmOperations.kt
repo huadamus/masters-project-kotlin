@@ -35,8 +35,11 @@ fun getNewGenerationDefensiveGenomes(outcomes: List<SimulationOutcome>): List<Ge
     return getMutatedGenomes(getCrossoverDefensiveGenomes(selectedGenomes))
 }
 
-fun getNewGenerationOffensiveGenomes(outcomes: List<OffensiveGenome>): List<OffensiveGenome> {
+fun getNewGenerationOffensiveGenomes(outcomes: List<OffensiveGenome>, mutateBoth: Boolean): List<OffensiveGenome> {
     val selectedGenomes = selectOffensiveGenomeWithTournament(outcomes).shuffled()
+    if (mutateBoth) {
+        return getMutatedOffensiveGenomes(getCrossoverOffensiveGenomes(selectedGenomes))
+    }
     return getMutatedGenomes(getCrossoverOffensiveGenomes(selectedGenomes)) as List<OffensiveGenome>
 }
 
@@ -47,10 +50,16 @@ fun getNewGenerationDefensiveGenomesByRankAndVolume(outcomes: List<SimulationOut
     return getMutatedGenomes(getCrossoverDefensiveGenomes(selectedGenomes))
 }
 
-fun getNewGenerationOffensiveGenomesByRankAndVolume(outcomes: List<OffensiveGenome>): List<OffensiveGenome> {
+fun getNewGenerationOffensiveGenomesByRankAndVolume(
+    outcomes: List<OffensiveGenome>,
+    mutateBoth: Boolean
+): List<OffensiveGenome> {
     val rankedOutcomes = getRankedOffensiveOutcomes(outcomes)
     val rankedOutcomesWithVolume = getRankedOffensiveOutcomesVolume(rankedOutcomes)
     val selectedGenomes = selectWithTournamentByRankAndVolume(rankedOutcomesWithVolume)
+    if (mutateBoth) {
+        return getMutatedOffensiveGenomes(getCrossoverOffensiveGenomes(selectedGenomes))
+    }
     return getMutatedGenomes(getCrossoverOffensiveGenomes(selectedGenomes)) as List<OffensiveGenome>
 }
 
@@ -81,7 +90,10 @@ fun getNewGenerationDefensiveGenomesByStrength(outcomes: List<SimulationOutcome>
     return getMutatedGenomes(getCrossoverDefensiveGenomes(binarySelectedGenomes))
 }
 
-fun getNewGenerationOffensiveGenomesByStrength(outcomes: List<OffensiveGenome>): List<OffensiveGenome> {
+fun getNewGenerationOffensiveGenomesByStrength(
+    outcomes: List<OffensiveGenome>,
+    mutateBoth: Boolean
+): List<OffensiveGenome> {
     val outcomesWithStrength = evaluateOffensiveGenomesStrength(outcomes)
     val outcomesWithFitness = evaluateOffensiveGenomesStrengthRawFitness(outcomesWithStrength)
     val outcomesWithCorrectFitness =
@@ -109,6 +121,9 @@ fun getNewGenerationOffensiveGenomesByStrength(outcomes: List<OffensiveGenome>):
         } else {
             outcome1.first.clone()
         }
+    }
+    if (mutateBoth) {
+        return getMutatedOffensiveGenomes(getCrossoverOffensiveGenomes(binarySelectedGenomes))
     }
     return getMutatedGenomes(getCrossoverOffensiveGenomes(binarySelectedGenomes)) as List<OffensiveGenome>
 }
@@ -142,7 +157,8 @@ fun getNewGenerationDefensiveGenomesByNtgaMethod(
 fun getNewGenerationOffensiveGenomesByNtgaMethod(
     generation: Int,
     outcomes: Collection<OffensiveGenome>,
-    archive: Collection<OffensiveGenome>
+    archive: Collection<OffensiveGenome>,
+    mutateBoth: Boolean
 ): List<OffensiveGenome> {
     val combined = outcomes + archive
     val selection = if (generation.mod(2 * NTGA2_GS_GENERATIONS) < NTGA2_GS_GENERATIONS) {
@@ -162,6 +178,11 @@ fun getNewGenerationOffensiveGenomesByNtgaMethod(
         children += selection[i * 2].modularCrossover(selection[i * 2 + 1]).toList()
     }
     children.forEach { it.mutate() }
+    if (mutateBoth) {
+        children.forEach { genome ->
+            genome.bestDefensiveGenome?.mutate()
+        }
+    }
     return children
 }
 
@@ -540,6 +561,20 @@ private fun getMutatedGenomes(genomes: List<Genome>): List<Genome> {
     }
     for (genome in output) {
         genome.mutate()
+    }
+    return output
+}
+
+private fun getMutatedOffensiveGenomes(genomes: List<OffensiveGenome>): List<OffensiveGenome> {
+    val output = mutableListOf<OffensiveGenome>()
+    for (genome in genomes) {
+        output += genome.clone()
+    }
+    for (genome in output) {
+        genome.mutate()
+        if (genome.bestDefensiveGenome != null) {
+            genome.bestDefensiveGenome!!.mutate()
+        }
     }
     return output
 }

@@ -98,16 +98,15 @@ class CoevolutionGeneticAlgorithm(
                         }
                     }
                     SelectionMethod.NSGA_II, SelectionMethod.SPEA2, SelectionMethod.NTGA2 -> {
-                        val bestSolutions = paretoEvaluateOffensiveGenomes(
-                            listOf(
-                                randomOutcomeSolution,
-                                randomOutcomeSolution2,
-                                bestOutcomeSolution,
-                            )
-                        ).toMutableList()
+                        val solutions = mutableListOf(
+                            randomOutcomeSolution,
+                            randomOutcomeSolution2,
+                            bestOutcomeSolution,
+                        )
                         if (offensiveGenome.profitsWithDefensiveGenome != null) {
-                            bestSolutions += offensiveGenome.clone()
+                            solutions += offensiveGenome.clone()
                         }
+                        val bestSolutions = paretoEvaluateOffensiveGenomes(solutions).toMutableList()
                         val randomBest = bestSolutions.random()
                         offensiveGenome.profitsWithDefensiveGenome = randomBest.profitsWithDefensiveGenome
                         offensiveGenome.riskWithDefensiveGenome = randomBest.riskWithDefensiveGenome
@@ -133,6 +132,16 @@ class CoevolutionGeneticAlgorithm(
                 }"
             )
 
+            val defensivePopulationBeforeOperations =
+                paretoEvaluateOffensiveGenomes(
+                    matchWithRandomOutcomes + matchWithRandomOutcomes2 +
+                            matchWithBestOutcomes
+                ).shuffled().take(100).map {
+                    val output = SimulationOutcome(it.profitsWithDefensiveGenome!!, it.riskWithDefensiveGenome!!)
+                    output.genome = it.bestDefensiveGenome!!.clone()
+                    output
+                }
+
             archive += paretoEvaluateOffensiveGenomes(assignedOffensivePopulation).toList()
             archive = paretoEvaluateOffensiveGenomes(archive.toList()).toMutableSet()
 
@@ -149,26 +158,32 @@ class CoevolutionGeneticAlgorithm(
             when (selectionMethod) {
                 SelectionMethod.HV_PARETO -> {
                     offensiveGenomesPopulation = newOffensivePopulation +
-                            getNewGenerationOffensiveGenomes(assignedOffensivePopulation).toMutableList()
+                            getNewGenerationOffensiveGenomes(assignedOffensivePopulation, false).toMutableList()
                                 .shuffled()
                     defensiveGenomesPopulation = newDefensivePopulation +
-                            getNewGenerationDefensiveGenomes(defensiveOutcomes).toMutableList()
+                            getNewGenerationDefensiveGenomes(defensivePopulationBeforeOperations).toMutableList()
                                 .shuffled()
                 }
                 SelectionMethod.NSGA_II -> {
                     offensiveGenomesPopulation = newOffensivePopulation +
-                            getNewGenerationOffensiveGenomesByRankAndVolume(assignedOffensivePopulation).toMutableList()
+                            getNewGenerationOffensiveGenomesByRankAndVolume(
+                                assignedOffensivePopulation,
+                                false
+                            ).toMutableList()
                                 .shuffled()
                     defensiveGenomesPopulation = newDefensivePopulation +
-                            getNewGenerationDefensiveGenomesByRankAndVolume(defensiveOutcomes).toMutableList()
+                            getNewGenerationDefensiveGenomesByRankAndVolume(defensivePopulationBeforeOperations).toMutableList()
                                 .shuffled()
                 }
                 SelectionMethod.SPEA2 -> {
                     offensiveGenomesPopulation = newOffensivePopulation +
-                            getNewGenerationOffensiveGenomesByStrength(assignedOffensivePopulation).toMutableList()
+                            getNewGenerationOffensiveGenomesByStrength(
+                                assignedOffensivePopulation,
+                                false
+                            ).toMutableList()
                                 .shuffled()
                     defensiveGenomesPopulation = newDefensivePopulation +
-                            getNewGenerationDefensiveGenomesByStrength(defensiveOutcomes).toMutableList()
+                            getNewGenerationDefensiveGenomesByStrength(defensivePopulationBeforeOperations).toMutableList()
                                 .shuffled()
                 }
                 SelectionMethod.NTGA2 -> {
@@ -176,13 +191,13 @@ class CoevolutionGeneticAlgorithm(
                             getNewGenerationOffensiveGenomesByNtgaMethod(
                                 i,
                                 assignedOffensivePopulation,
-                                archive
+                                archive, false
                             ).toMutableList()
                                 .shuffled()
                     defensiveGenomesPopulation = newDefensivePopulation +
                             getNewGenerationDefensiveGenomesByNtgaMethod(
                                 i,
-                                defensiveOutcomes,
+                                defensivePopulationBeforeOperations,
                                 archive.map {
                                     val output =
                                         SimulationOutcome(it.profitsWithDefensiveGenome!!, it.riskWithDefensiveGenome!!)

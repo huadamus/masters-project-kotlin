@@ -23,22 +23,24 @@ class ConfigurationExperiment : Experiment("configuration") {
         "NSGA-II",
         "SPEA2",
         "NTGA2",
+        "MOEA/D",
         "cEA-HV",
         "cNSGA-II",
         "cSPEA2",
         "cNTGA2",
-        "MOEA/D",
+        "cMOEA/D",
     )
 
     private val genericHvName = "$name-generic-hv"
     private val genericNsgaName = "$name-generic-nsga2"
     private val genericSpeaName = "$name-generic-spea2"
     private val genericNtgaName = "$name-generic-ntga2"
+    private val genericMoeaDName = "$name-generic-moead"
     private val coevolutionHvName = "$name-coevolution-hv"
     private val coevolutionNsgaName = "$name-coevolution-nsga2"
     private val coevolutionSpeaName = "$name-coevolution-spea2"
     private val coevolutionNtgaName = "$name-coevolution-ntga2"
-    private val moeaDName = "$name-moead"
+    private val coevolutionMoeaDName = "$name-coevolution-moead"
     private val genericGeneticAlgorithmHvPareto = GenericGeneticAlgorithm(
         genericHvName,
         "${logString}No coevolution, HV-Pareto",
@@ -88,6 +90,19 @@ class ConfigurationExperiment : Experiment("configuration") {
         360,
         true,
         SelectionMethod.NTGA2,
+        DataLoader.loadDevelopedData(),
+        DataLoader.loadEmergingData(),
+        DataLoader.loadCrbAndOilData(),
+        DataLoader.loadGoldUsdData(),
+        DataLoader.loadShillerPESP500Ratio(),
+        DataLoader.loadDowToGoldData()
+    )
+    private val genericMoeaDAlgorithm = MoeaDAlgorithm(
+        genericMoeaDName,
+        "${logString}No coevolution, MOEA/D",
+        listOf(Pair(Date(1, 1, 1988), Date(1, 1, 2018))),
+        360,
+        true,
         DataLoader.loadDevelopedData(),
         DataLoader.loadEmergingData(),
         DataLoader.loadCrbAndOilData(),
@@ -151,9 +166,9 @@ class ConfigurationExperiment : Experiment("configuration") {
         DataLoader.loadShillerPESP500Ratio(),
         DataLoader.loadDowToGoldData()
     )
-    private val moeaDAlgorithm = MoeaDAlgorithm(
-        moeaDName,
-        "${logString}MOEA/D",
+    private val coevolutionGeneticAlgorithmMoeaD = CoevolutionMoeaDAlgorithm(
+        coevolutionNtgaName,
+        "${logString}Coevolution, MOEA/D",
         listOf(Pair(Date(1, 1, 1988), Date(1, 1, 2018))),
         360,
         true,
@@ -174,11 +189,12 @@ class ConfigurationExperiment : Experiment("configuration") {
         lateinit var genericGeneticAlgorithmNsgaIIState: GenericGeneticAlgorithmState
         lateinit var genericGeneticAlgorithmSpea2State: GenericGeneticAlgorithmState
         lateinit var genericGeneticAlgorithmNtga2State: GenericGeneticAlgorithmState
+        lateinit var genericMoeaDState: GenericGeneticAlgorithmState
         lateinit var coevolutionGeneticAlgorithmHvParetoState: CoevolutionGeneticAlgorithmState
         lateinit var coevolutionGeneticAlgorithmNsgaIIState: CoevolutionGeneticAlgorithmState
         lateinit var coevolutionGeneticAlgorithmSpea2State: CoevolutionGeneticAlgorithmState
         lateinit var coevolutionGeneticAlgorithmNtga2State: CoevolutionGeneticAlgorithmState
-        lateinit var moeaDState: GenericGeneticAlgorithmState
+        lateinit var coevolutionMoeaDState: CoevolutionGeneticAlgorithmState
         CROSSOVER_CHANCE = eaHvConfigurationParameters[0] as Double
         MUTATION_CHANCE = eaHvConfigurationParameters[1] as Double
         TOURNAMENT_PICKS = eaHvConfigurationParameters[2] as Int
@@ -207,13 +223,20 @@ class ConfigurationExperiment : Experiment("configuration") {
             genericGeneticAlgorithmNtga2State =
                 (Runner.runCombining(genericGeneticAlgorithmNtga2, state[3], RUNS) as GenericGeneticAlgorithmState)
         } / 1000
+        CROSSOVER_CHANCE = moeaDConfigurationParameters[0]
+        MUTATION_CHANCE = moeaDConfigurationParameters[1]
+        timeValues += measureTimeMillis {
+            genericMoeaDState = (Runner.runCombining(
+                genericMoeaDAlgorithm, state[4], RUNS
+            ) as GenericGeneticAlgorithmState)
+        } / 1000
         CROSSOVER_CHANCE = eaHvConfigurationParameters[0] as Double
         MUTATION_CHANCE = eaHvConfigurationParameters[1] as Double
         TOURNAMENT_PICKS = eaHvConfigurationParameters[2] as Int
         timeValues += measureTimeMillis {
             coevolutionGeneticAlgorithmHvParetoState =
                 (Runner.runCombining(
-                    coevolutionGeneticAlgorithmHvPareto, state[4], RUNS
+                    coevolutionGeneticAlgorithmHvPareto, state[5], RUNS
                 ) as CoevolutionGeneticAlgorithmState)
         } / 1000
         CROSSOVER_CHANCE = nsgaIIConfigurationParameters[0] as Double
@@ -222,7 +245,7 @@ class ConfigurationExperiment : Experiment("configuration") {
         timeValues += measureTimeMillis {
             coevolutionGeneticAlgorithmNsgaIIState =
                 (Runner.runCombining(
-                    coevolutionGeneticAlgorithmNsgaII, state[5], RUNS
+                    coevolutionGeneticAlgorithmNsgaII, state[6], RUNS
                 ) as CoevolutionGeneticAlgorithmState)
         } / 1000
         CROSSOVER_CHANCE = ntga2ConfigurationParameters[0] as Double
@@ -231,7 +254,7 @@ class ConfigurationExperiment : Experiment("configuration") {
         timeValues += measureTimeMillis {
             coevolutionGeneticAlgorithmSpea2State =
                 (Runner.runCombining(
-                    coevolutionGeneticAlgorithmSpea2, state[6], RUNS
+                    coevolutionGeneticAlgorithmSpea2, state[7], RUNS
                 ) as CoevolutionGeneticAlgorithmState)
         } / 1000
         CROSSOVER_CHANCE = ntga2ConfigurationParameters[0] as Double
@@ -239,25 +262,26 @@ class ConfigurationExperiment : Experiment("configuration") {
         TOURNAMENT_PICKS = ntga2ConfigurationParameters[2] as Int
         timeValues += measureTimeMillis {
             coevolutionGeneticAlgorithmNtga2State = (Runner.runCombining(
-                coevolutionGeneticAlgorithmNtga2, state[7], RUNS
+                coevolutionGeneticAlgorithmNtga2, state[8], RUNS
             ) as CoevolutionGeneticAlgorithmState)
         } / 1000
         CROSSOVER_CHANCE = moeaDConfigurationParameters[0]
         MUTATION_CHANCE = moeaDConfigurationParameters[1]
         timeValues += measureTimeMillis {
-            moeaDState = (Runner.runCombining(
-                moeaDAlgorithm, state[8], RUNS
-            ) as GenericGeneticAlgorithmState)
+            coevolutionMoeaDState = (Runner.runCombining(
+                coevolutionGeneticAlgorithmMoeaD, state[9], RUNS
+            ) as CoevolutionGeneticAlgorithmState)
         } / 1000
         genericGeneticAlgorithmHvParetoState.save(genericHvName)
         genericGeneticAlgorithmNsgaIIState.save(genericNsgaName)
         genericGeneticAlgorithmSpea2State.save(genericSpeaName)
         genericGeneticAlgorithmNtga2State.save(genericNtgaName)
+        genericMoeaDState.save(genericMoeaDName)
         coevolutionGeneticAlgorithmHvParetoState.save(coevolutionHvName)
         coevolutionGeneticAlgorithmNsgaIIState.save(coevolutionNsgaName)
         coevolutionGeneticAlgorithmSpea2State.save(coevolutionSpeaName)
         coevolutionGeneticAlgorithmNtga2State.save(coevolutionNtgaName)
-        moeaDState.save(moeaDName)
+        coevolutionMoeaDState.save(coevolutionMoeaDName)
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -267,27 +291,29 @@ class ConfigurationExperiment : Experiment("configuration") {
         val geneticAlgorithmOutcomeNsga = state[1] as GenericGeneticAlgorithmState
         val geneticAlgorithmOutcomeSpea2 = state[2] as GenericGeneticAlgorithmState
         val geneticAlgorithmOutcomeNtga2 = state[3] as GenericGeneticAlgorithmState
-        val coevolutionGeneticAlgorithmOutcomeHv = state[4] as CoevolutionGeneticAlgorithmState
-        val coevolutionGeneticAlgorithmOutcomeNsga = state[5] as CoevolutionGeneticAlgorithmState
-        val coevolutionGeneticAlgorithmOutcomeSpea2 = state[6] as CoevolutionGeneticAlgorithmState
-        val coevolutionGeneticAlgorithmOutcomeNtga2 = state[7] as CoevolutionGeneticAlgorithmState
-        val moeaDOutcome = state[8] as GenericGeneticAlgorithmState
+        val moeaDOutcome = state[4] as GenericGeneticAlgorithmState
+        val coevolutionGeneticAlgorithmOutcomeHv = state[5] as CoevolutionGeneticAlgorithmState
+        val coevolutionGeneticAlgorithmOutcomeNsga = state[6] as CoevolutionGeneticAlgorithmState
+        val coevolutionGeneticAlgorithmOutcomeSpea2 = state[7] as CoevolutionGeneticAlgorithmState
+        val coevolutionGeneticAlgorithmOutcomeNtga2 = state[8] as CoevolutionGeneticAlgorithmState
+        val coevolutionMoeaDOutcome = state[9] as CoevolutionGeneticAlgorithmState
 
         val outcomes = mutableListOf(
             geneticAlgorithmOutcomeHv.archive.toList(),
             geneticAlgorithmOutcomeNsga.archive.toList(),
             geneticAlgorithmOutcomeSpea2.archive.toList(),
             geneticAlgorithmOutcomeNtga2.archive.toList(),
+            moeaDOutcome.archive.toList(),
             coevolutionGeneticAlgorithmOutcomeHv.archive.toList(),
             coevolutionGeneticAlgorithmOutcomeNsga.archive.toList(),
             coevolutionGeneticAlgorithmOutcomeSpea2.archive.toList(),
             coevolutionGeneticAlgorithmOutcomeNtga2.archive.toList(),
-            moeaDOutcome.archive.toList()
+            coevolutionMoeaDOutcome.archive.toList(),
         )
 
         val purityValues = mutableListOf<Double>()
         val mainFront = outcomes[0] + outcomes[1] + outcomes[2] + outcomes[3] + outcomes[4] + outcomes[5] +
-                outcomes[6] + outcomes[7] + outcomes[8]
+                outcomes[6] + outcomes[7] + outcomes[8] + outcomes[9]
         val evaluatedMainFront = paretoEvaluateOffensiveGenomes(mainFront).map {
             SimulationOutcome(
                 it.profitsWithDefensiveGenome!!,
@@ -314,7 +340,7 @@ class ConfigurationExperiment : Experiment("configuration") {
         }
 
         val chartinfo = buildString {
-            for (i in 0 until 9) {
+            for (i in 0 until 10) {
                 append(
                     "${labels[i]} - Purity: ${"%.3f".format(purityValues[i])}, Pareto Front size: ${output[i].size}, " +
                             "Inverted Generational Distance: ${
@@ -384,6 +410,10 @@ class ConfigurationExperiment : Experiment("configuration") {
         if (genericGeneticAlgorithmStateNtga == null) {
             genericGeneticAlgorithmStateNtga = genericGeneticAlgorithmNtga2.getEmptyState()
         }
+        var genericMoeaDState = GenericGeneticAlgorithmState.load(genericMoeaDName)
+        if (genericMoeaDState == null) {
+            genericMoeaDState = genericMoeaDAlgorithm.getEmptyState()
+        }
         var coevolutionGeneticAlgorithmStateHv = CoevolutionGeneticAlgorithmState.load(coevolutionHvName)
         if (coevolutionGeneticAlgorithmStateHv == null) {
             coevolutionGeneticAlgorithmStateHv = coevolutionGeneticAlgorithmHvPareto.getEmptyState()
@@ -400,20 +430,21 @@ class ConfigurationExperiment : Experiment("configuration") {
         if (coevolutionGeneticAlgorithmStateNtga == null) {
             coevolutionGeneticAlgorithmStateNtga = coevolutionGeneticAlgorithmNtga2.getEmptyState()
         }
-        var moeaDState = GenericGeneticAlgorithmState.load(moeaDName)
-        if (moeaDState == null) {
-            moeaDState = moeaDAlgorithm.getEmptyState()
+        var coevolutionMoeaDState = CoevolutionGeneticAlgorithmState.load(coevolutionMoeaDName)
+        if (coevolutionMoeaDState == null) {
+            coevolutionMoeaDState = coevolutionGeneticAlgorithmMoeaD.getEmptyState()
         }
         return listOf(
             genericGeneticAlgorithmStateHv,
             genericGeneticAlgorithmStateNsga,
             genericGeneticAlgorithmStateSpea,
             genericGeneticAlgorithmStateNtga,
+            genericMoeaDState,
             coevolutionGeneticAlgorithmStateHv,
             coevolutionGeneticAlgorithmStateNsga,
             coevolutionGeneticAlgorithmStateSpea,
             coevolutionGeneticAlgorithmStateNtga,
-            moeaDState,
+            coevolutionMoeaDState,
         )
     }
 

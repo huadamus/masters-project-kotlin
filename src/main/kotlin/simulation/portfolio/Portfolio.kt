@@ -12,7 +12,6 @@ abstract class Portfolio(private val startDate: Date) {
     protected var emergingSaleProfits = 0.0
     protected var crbSaleProfits = 0.0
     protected var goldSaleProfits = 0.0
-
     fun handle(date: Date) {
         historicalDataStore.updateLastPrices(date)
         if (date.isNewMonth()) {
