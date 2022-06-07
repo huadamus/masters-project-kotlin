@@ -3,6 +3,7 @@
 import devtools.getTrainingAndTestPeriods
 import model.Date
 import data.CROSS_VALIDATION_DATASET_72_72
+import data.DataLoader
 import experiment.*
 import java.io.File
 import kotlin.system.measureTimeMillis
@@ -10,7 +11,7 @@ import kotlin.system.measureTimeMillis
 //metaheuristic
 const val POPULATION_SIZE = 100
 const val MOEA_D_VECTORS_COUNT = 100
-const val GENERATIONS = 5
+const val GENERATIONS = 2
 var CROSSOVER_CHANCE = 0.80
 var MUTATION_CHANCE = 0.09
 var TOURNAMENT_PICKS = 16
@@ -28,7 +29,7 @@ val moeaDConfigurationParameters = listOf(0.80, 0.10)
 
 //simulation
 val CROSS_VALIDATION_DATASET = CROSS_VALIDATION_DATASET_72_72
-const val TESTING_PERIODS = 1
+const val TESTING_PERIODS = 2
 const val RUNS = 2
 
 //technical
@@ -53,7 +54,8 @@ fun main(args: Array<String>) {
         //runGaussMutationExperiment()
         //log("conf")
         //runConfigurationsExperiment()
-        runCrossValidationExperiment()
+        //runCrossValidationExperiment()
+        measureMaxSp500Falls()
     }
     log("Total time: ${time / 1000}s")
     writer.close()
@@ -80,7 +82,7 @@ private fun runGaussMutationExperiment() {
 
 private fun runConfigurationsExperiment() {
     val configurationExperiment = ConfigurationExperiment()
-    configurationExperiment.run()
+    //configurationExperiment.run()
     configurationExperiment.showResults()
 }
 
@@ -88,4 +90,43 @@ private fun runCrossValidationExperiment() {
     val crossValidationExperiment = CrossValidationExperiment(CROSS_VALIDATION_DATASET)
     crossValidationExperiment.run()
     crossValidationExperiment.showResults()
+}
+
+private fun measureMaxSp500Falls() {
+    val sp500Data = DataLoader.loadStockMarketData("data/sp500.csv")
+        .filter { it.key >= Date(1, 6, 2019) && it.key < Date(1, 1, 2021) }
+
+    var maxFall = 0.0
+    var currentMonth = 1
+
+    var lastPrice = 0.0
+    var currentPrice = 0.0
+
+    val finalPeriods = mutableListOf<Pair<Date, Double>>()
+
+    for (data in sp500Data) {
+        if (data.key.month != currentMonth) {
+            finalPeriods += Pair(data.key, data.value)
+            currentMonth = data.key.month
+        }
+    }
+
+    for (data in finalPeriods) {
+        if (lastPrice == 0.0) {
+            lastPrice = data.second
+            continue
+        } else {
+            lastPrice = currentPrice
+            currentPrice = data.second
+            if (currentPrice < lastPrice) {
+                val fall = 1.0 - (currentPrice / lastPrice)
+                println("${data.first}, $fall")
+                if (fall > maxFall) {
+                    maxFall = fall
+                }
+            }
+        }
+    }
+
+    println(maxFall)
 }

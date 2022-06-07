@@ -8,7 +8,7 @@ abstract class Experiment(protected val name: String) {
 
     fun showResults() {
         val outcomes = calculateAndPrintOutcomes()
-        //drawChart(outcomes)
+        drawChart(outcomes)
         //saveChart(outcomes)
     }
 

@@ -86,7 +86,7 @@ object DataLoader {
         return output
     }
 
-    private fun loadStockMarketData(filename: String): Map<Date, Double> {
+    fun loadStockMarketData(filename: String): Map<Date, Double> {
         val scanner = Scanner(File(filename))
         val output = mutableMapOf<Date, Double>()
         scanner.forEach {
