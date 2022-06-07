@@ -230,7 +230,7 @@ class ParametrizationExperiment : Experiment("parametrization") {
         throw Exception("This experiment does not draw charts.")
     }
 
-    override fun saveChart(runId: Int, outcomes: List<List<SimulationOutcome>>) {
+    override fun saveChart(outcomes: List<List<SimulationOutcome>>) {
         throw Exception("This experiment does not draw charts.")
     }
 

@@ -3,6 +3,7 @@ package experiment
 import RUNS
 import TESTING_PERIODS
 import data.DataLoader
+import log
 import metaheuristic.*
 import model.Date
 import model.OffensiveGenome
@@ -50,7 +51,7 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
 
     @Suppress("UNCHECKED_CAST")
     override fun calculateAndPrintOutcomes(): List<List<SimulationOutcome>> {
-        println("=====CROSS-VALIDATION=====")
+        log("=====CROSS-VALIDATION=====")
         finalTestPeriods.clear()
         val iterationOutcomes = mutableListOf<List<SimulationOutcome>>()
         val tested = mutableListOf<List<OffensiveGenome>>()
@@ -127,12 +128,12 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
         }
 
         for (i in 0 until iterationOutcomes.size / 3) {
-            println()
-            println("${finalTestPeriods[i]} genomes:")
-            println(
+            log("")
+            log("${finalTestPeriods[i]} genomes:")
+            log(
                 OutputPrintingManager.getReadableParameters(iterationOutcomes[i * 3])
             )
-            println(
+            log(
                 "${finalTestPeriods[i]} scores: ${System.lineSeparator()}${
                     OutputPrintingManager.getReadableScore(iterationOutcomes[i * 3])
                 }"
@@ -141,8 +142,8 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
                 iterationOutcomes[0] + iterationOutcomes[3] + iterationOutcomes[6] + iterationOutcomes[9] + iterationOutcomes[12],
                 iterationOutcomes[i * 3]
             )
-            println("${finalTestPeriods[i]} buy-and-hold score: ${iterationOutcomes[i * 3 + 1][0]}")
-            println("${finalTestPeriods[i]} active management score: ${iterationOutcomes[i * 3 + 2][0]}")
+            log("${finalTestPeriods[i]} buy-and-hold score: ${iterationOutcomes[i * 3 + 1][0]}")
+            log("${finalTestPeriods[i]} active management score: ${iterationOutcomes[i * 3 + 2][0]}")
         }
 
         showValidationOutcome(tested)
@@ -155,7 +156,7 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
         individuals: List<SimulationOutcome>
     ) {
         val mappedIndividuals = individuals.map { Pair(it.profits, it.risk) }
-        println(
+        log(
             "Purity: ${
                 calculateParetoPurity(
                     individuals,
@@ -170,7 +171,7 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
     }
 
     private fun showValidationOutcome(archive: List<List<OffensiveGenome>>) {
-        println("=====18 TO 21=====")
+        log("=====18 TO 21=====")
         val iterationOutcomes = mutableListOf<List<SimulationOutcome>>()
 
         val buyAndHoldScore = Simulator.getScoreForBuyAndHold(
@@ -229,12 +230,12 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
             }
         }
 
-        println("Buy-and-hold score: ${iterationOutcomes[0]}")
-        println("Active management score: ${iterationOutcomes[1]}")
+        log("Buy-and-hold score: ${iterationOutcomes[0]}")
+        log("Active management score: ${iterationOutcomes[1]}")
         for (i in 2 until 2 + dataset.third.size / dataset.second) {
-            println("Iteration ${i - 1}: ${iterationOutcomes[i]}")
-            println("Iteration ${i - 1} genomes:")
-            println(OutputPrintingManager.getReadableParameters(iterationOutcomes[i]))
+            log("Iteration ${i - 1}: ${iterationOutcomes[i]}")
+            log("Iteration ${i - 1} genomes:")
+            log(OutputPrintingManager.getReadableParameters(iterationOutcomes[i]))
         }
 
         validationOutcomes.clear()
@@ -246,9 +247,9 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
         CrossValidation18to21ChartDrawer().drawChart(validationOutcomes)
     }
 
-    override fun saveChart(runId: Int, outcomes: List<List<SimulationOutcome>>) {
-        CrossValidationChartDrawer(finalTestPeriods).saveChart("cross_validation_run_$runId", outcomes)
-        CrossValidation18to21ChartDrawer().saveChart("cross_validation_validation_set_run_$runId", validationOutcomes)
+    override fun saveChart(outcomes: List<List<SimulationOutcome>>) {
+        CrossValidationChartDrawer(finalTestPeriods).saveChart("cross_validation", outcomes)
+        CrossValidation18to21ChartDrawer().saveChart("cross_validation_validation_set", validationOutcomes)
     }
 
     private fun loadState(iteration: Int): CoevolutionGeneticAlgorithmState {

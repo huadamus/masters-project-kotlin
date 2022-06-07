@@ -1,15 +1,34 @@
 package experiment
 
+import CROSSOVER_CHANCE
+import MUTATION_CHANCE
 import RUNS
+import TOURNAMENT_PICKS
 import data.DataLoader
+import eaHvConfigurationParameters
+import log
 import metaheuristic.*
 import model.Date
+import moeaDConfigurationParameters
+import nsgaIIConfigurationParameters
+import ntga2ConfigurationParameters
 import output.ConfigurationChartDrawer
-import simulation.Runner
-import simulation.SimulationOutcome
+import simulation.*
+import spea2ConfigurationParameters
 import kotlin.system.measureTimeMillis
 
 class ConfigurationExperiment : Experiment("configuration") {
+    private val labels = arrayOf(
+        "EA-HV",
+        "NSGA-II",
+        "SPEA2",
+        "NTGA2",
+        "cEA-HV",
+        "cNSGA-II",
+        "cSPEA2",
+        "cNTGA2",
+        "MOEA/D",
+    )
 
     private val genericHvName = "$name-generic-hv"
     private val genericNsgaName = "$name-generic-nsga2"
@@ -160,45 +179,71 @@ class ConfigurationExperiment : Experiment("configuration") {
         lateinit var coevolutionGeneticAlgorithmSpea2State: CoevolutionGeneticAlgorithmState
         lateinit var coevolutionGeneticAlgorithmNtga2State: CoevolutionGeneticAlgorithmState
         lateinit var moeaDState: GenericGeneticAlgorithmState
+        CROSSOVER_CHANCE = eaHvConfigurationParameters[0] as Double
+        MUTATION_CHANCE = eaHvConfigurationParameters[1] as Double
+        TOURNAMENT_PICKS = eaHvConfigurationParameters[2] as Int
         timeValues += measureTimeMillis {
             genericGeneticAlgorithmHvParetoState =
                 (Runner.runCombining(genericGeneticAlgorithmHvPareto, state[0], RUNS) as GenericGeneticAlgorithmState)
         } / 1000
+        CROSSOVER_CHANCE = nsgaIIConfigurationParameters[0] as Double
+        MUTATION_CHANCE = nsgaIIConfigurationParameters[1] as Double
+        TOURNAMENT_PICKS = nsgaIIConfigurationParameters[2] as Int
         timeValues += measureTimeMillis {
             genericGeneticAlgorithmNsgaIIState =
                 (Runner.runCombining(genericGeneticAlgorithmNsgaII, state[1], RUNS) as GenericGeneticAlgorithmState)
         } / 1000
+        CROSSOVER_CHANCE = spea2ConfigurationParameters[0] as Double
+        MUTATION_CHANCE = spea2ConfigurationParameters[1] as Double
+        TOURNAMENT_PICKS = spea2ConfigurationParameters[2] as Int
         timeValues += measureTimeMillis {
             genericGeneticAlgorithmSpea2State =
                 (Runner.runCombining(genericGeneticAlgorithmSpea2, state[2], RUNS) as GenericGeneticAlgorithmState)
         } / 1000
+        CROSSOVER_CHANCE = ntga2ConfigurationParameters[0] as Double
+        MUTATION_CHANCE = ntga2ConfigurationParameters[1] as Double
+        TOURNAMENT_PICKS = ntga2ConfigurationParameters[2] as Int
         timeValues += measureTimeMillis {
             genericGeneticAlgorithmNtga2State =
                 (Runner.runCombining(genericGeneticAlgorithmNtga2, state[3], RUNS) as GenericGeneticAlgorithmState)
         } / 1000
+        CROSSOVER_CHANCE = eaHvConfigurationParameters[0] as Double
+        MUTATION_CHANCE = eaHvConfigurationParameters[1] as Double
+        TOURNAMENT_PICKS = eaHvConfigurationParameters[2] as Int
         timeValues += measureTimeMillis {
             coevolutionGeneticAlgorithmHvParetoState =
                 (Runner.runCombining(
                     coevolutionGeneticAlgorithmHvPareto, state[4], RUNS
                 ) as CoevolutionGeneticAlgorithmState)
         } / 1000
+        CROSSOVER_CHANCE = nsgaIIConfigurationParameters[0] as Double
+        MUTATION_CHANCE = nsgaIIConfigurationParameters[1] as Double
+        TOURNAMENT_PICKS = nsgaIIConfigurationParameters[2] as Int
         timeValues += measureTimeMillis {
             coevolutionGeneticAlgorithmNsgaIIState =
                 (Runner.runCombining(
                     coevolutionGeneticAlgorithmNsgaII, state[5], RUNS
                 ) as CoevolutionGeneticAlgorithmState)
         } / 1000
+        CROSSOVER_CHANCE = ntga2ConfigurationParameters[0] as Double
+        MUTATION_CHANCE = ntga2ConfigurationParameters[1] as Double
+        TOURNAMENT_PICKS = ntga2ConfigurationParameters[2] as Int
         timeValues += measureTimeMillis {
             coevolutionGeneticAlgorithmSpea2State =
                 (Runner.runCombining(
                     coevolutionGeneticAlgorithmSpea2, state[6], RUNS
                 ) as CoevolutionGeneticAlgorithmState)
         } / 1000
+        CROSSOVER_CHANCE = ntga2ConfigurationParameters[0] as Double
+        MUTATION_CHANCE = ntga2ConfigurationParameters[1] as Double
+        TOURNAMENT_PICKS = ntga2ConfigurationParameters[2] as Int
         timeValues += measureTimeMillis {
             coevolutionGeneticAlgorithmNtga2State = (Runner.runCombining(
                 coevolutionGeneticAlgorithmNtga2, state[7], RUNS
             ) as CoevolutionGeneticAlgorithmState)
         } / 1000
+        CROSSOVER_CHANCE = moeaDConfigurationParameters[0]
+        MUTATION_CHANCE = moeaDConfigurationParameters[1]
         timeValues += measureTimeMillis {
             moeaDState = (Runner.runCombining(
                 moeaDAlgorithm, state[8], RUNS
@@ -259,7 +304,7 @@ class ConfigurationExperiment : Experiment("configuration") {
         }
         this.purityValues = purityValues
 
-        return outcomes.map {
+        val output = outcomes.map {
             it.map { offensiveGenome ->
                 SimulationOutcome(
                     offensiveGenome.profitsWithDefensiveGenome!!,
@@ -267,6 +312,46 @@ class ConfigurationExperiment : Experiment("configuration") {
                 )
             }
         }
+
+        val chartinfo = buildString {
+            for (i in 0 until 9) {
+                append(
+                    "${labels[i]} - Purity: ${"%.3f".format(purityValues[i])}, Pareto Front size: ${output[i].size}, " +
+                            "Inverted Generational Distance: ${
+                                "%.3f".format(
+                                    invertedGenerationalDistanceForSet(output[i].map {
+                                        Pair(
+                                            it.profits,
+                                            it.risk
+                                        )
+                                    })
+                                )
+                            }, Hypervolume: ${
+                                "%.3f".format(
+                                    hvParetoFitnessFunctionForSet(output[i].map {
+                                        Pair(
+                                            it.profits,
+                                            it.risk
+                                        )
+                                    })
+                                )
+                            }, Spacing: ${
+                                "%.3f".format(
+                                    spacingForSet(output[i].map {
+                                        Pair(
+                                            it.profits,
+                                            it.risk
+                                        )
+                                    })
+                                )
+                            } Time: ${if(timeValues.size > i) timeValues[i] else "N/A"}s" +
+                            System.lineSeparator()
+                )
+            }
+        }
+        log(chartinfo)
+
+        return output
     }
 
     override fun drawChart(outcomes: List<List<SimulationOutcome>>) {
@@ -275,11 +360,11 @@ class ConfigurationExperiment : Experiment("configuration") {
         )
     }
 
-    override fun saveChart(runId: Int, outcomes: List<List<SimulationOutcome>>) {
+    override fun saveChart(outcomes: List<List<SimulationOutcome>>) {
         ConfigurationChartDrawer(
             purityValues.toTypedArray(),
             timeValues.map { it.toInt() }.toTypedArray()
-        ).saveChart("configuration_run_$runId", outcomes)
+        ).saveChart("configuration", outcomes)
     }
 
     private fun loadState(): List<GeneticAlgorithmState> {

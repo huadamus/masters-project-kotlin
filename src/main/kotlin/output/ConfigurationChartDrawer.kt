@@ -6,9 +6,6 @@ import org.jfree.data.xy.XYDataset
 import org.jfree.data.xy.XYSeries
 import org.jfree.data.xy.XYSeriesCollection
 import simulation.SimulationOutcome
-import simulation.hvParetoFitnessFunctionForSet
-import simulation.invertedGenerationalDistanceForSet
-import simulation.spacingForSet
 
 
 class ConfigurationChartDrawer(private val purityValues: Array<Double>, private val timeValues: Array<Int>) :
@@ -94,42 +91,5 @@ class ConfigurationChartDrawer(private val purityValues: Array<Double>, private 
         }
         plot.getRendererForDataset(plot.getDataset(0)).setSeriesShape(8, shapes[0])
         plot.getRendererForDataset(plot.getDataset(0)).setSeriesPaint(8, classicalStrategiesColor)
-        val chartinfo = buildString {
-            for (i in 0 until 9) {
-                append(
-                    "${labels[i]} - Purity: ${"%.3f".format(purityValues[i])}, Pareto Front size: ${algorithmOutcomes!![i].size}, " +
-                            "Inverted Generational Distance: ${
-                                "%.3f".format(
-                                    invertedGenerationalDistanceForSet(algorithmOutcomes!![i].map {
-                                        Pair(
-                                            it.profits,
-                                            it.risk
-                                        )
-                                    })
-                                )
-                            }, Hypervolume: ${
-                                "%.3f".format(
-                                    hvParetoFitnessFunctionForSet(algorithmOutcomes!![i].map {
-                                        Pair(
-                                            it.profits,
-                                            it.risk
-                                        )
-                                    })
-                                )
-                            }, Spacing: ${
-                                "%.3f".format(
-                                    spacingForSet(algorithmOutcomes!![i].map {
-                                        Pair(
-                                            it.profits,
-                                            it.risk
-                                        )
-                                    })
-                                )
-                            } Time: ${if(timeValues.size > i) timeValues[i] else "N/A"}s" +
-                            System.lineSeparator()
-                )
-            }
-        }
-        println(chartinfo)
     }
 }

@@ -1,6 +1,7 @@
 package experiment
 
 import CROSSOVER_CHANCE
+import GAUSS_MUTATION
 import MUTATION_CHANCE
 import RUNS
 import TOURNAMENT_PICKS
@@ -14,15 +15,37 @@ import simulation.Runner
 import simulation.SimulationOutcome
 import simulation.hvParetoFitnessFunctionForSet
 
-class GaussTestExperiment : Experiment("parametrization") {
+class GaussMutationExperiment : Experiment("gauss") {
     private val methodsSet = listOf(
         SelectionMethod.NSGA_II,
         SelectionMethod.NTGA2
     )
 
     override fun run() {
+        GAUSS_MUTATION = false
         for (method in methodsSet) {
-            val name = "parametrization_${method}_"
+            val name = "gauss_false_${method}_"
+            val geneticAlgorithm = GenericGeneticAlgorithm(
+                name,
+                "$method",
+                listOf(Pair(Date(1, 1, 1988), Date(1, 1, 2018))),
+                360,
+                true,
+                method,
+                DataLoader.loadDevelopedData(),
+                DataLoader.loadEmergingData(),
+                DataLoader.loadCrbAndOilData(),
+                DataLoader.loadGoldUsdData(),
+                DataLoader.loadShillerPESP500Ratio(),
+                DataLoader.loadDowToGoldData()
+            )
+            (Runner.runCombining(
+                geneticAlgorithm, geneticAlgorithm.getEmptyState(), RUNS
+            ) as GenericGeneticAlgorithmState).save(name)
+        }
+        GAUSS_MUTATION = true
+        for (method in methodsSet) {
+            val name = "gauss_true_${method}_"
             val geneticAlgorithm = GenericGeneticAlgorithm(
                 name,
                 "$method",
@@ -45,7 +68,23 @@ class GaussTestExperiment : Experiment("parametrization") {
 
     override fun calculateAndPrintOutcomes(): List<List<SimulationOutcome>> {
         for (method in methodsSet) {
-            var name = "parametrization_${method}_"
+            var name = "gauss_false_${method}_"
+            val result = Result(
+                CROSSOVER_CHANCE,
+                MUTATION_CHANCE,
+                TOURNAMENT_PICKS,
+                loadState(name)
+            )
+            val hv = hvParetoFitnessFunctionForSet(result.state.archive.map {
+                Pair(
+                    it.profitsWithDefensiveGenome!!,
+                    it.riskWithDefensiveGenome!!
+                )
+            })
+            log("$hv")
+        }
+        for (method in methodsSet) {
+            var name = "gauss_true_${method}_"
             val result = Result(
                 CROSSOVER_CHANCE,
                 MUTATION_CHANCE,
@@ -67,7 +106,7 @@ class GaussTestExperiment : Experiment("parametrization") {
         throw Exception("This experiment does not draw charts.")
     }
 
-    override fun saveChart(runId: Int, outcomes: List<List<SimulationOutcome>>) {
+    override fun saveChart(outcomes: List<List<SimulationOutcome>>) {
         throw Exception("This experiment does not draw charts.")
     }
 
@@ -114,6 +153,6 @@ class GaussTestExperiment : Experiment("parametrization") {
     }
 
     companion object {
-        const val logString = "Simulation for parametrization - "
+        const val logString = "Simulation for gauss - "
     }
 }

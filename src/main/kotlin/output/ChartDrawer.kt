@@ -56,7 +56,45 @@ abstract class ChartDrawer(private val chartTitle: String) : JFrame() {
         algorithmOutcomes: List<List<SimulationOutcome>>
     ) {
         val chartPanel = prepareChart(algorithmOutcomes, false)
-        ChartUtilities.saveChartAsPNG(File("chartresults/$name.png"), chartPanel.chart, 1000, 800)
+
+        chartPanel.chart.xyPlot.domainAxis.setRange(0.0, 10.0)
+        ChartUtilities.saveChartAsPNG(File("results/${name}1a.png"), chartPanel.chart, 1600, 1200)
+        chartPanel.chart.xyPlot.domainAxis.setRange(10.0, 20.0)
+        ChartUtilities.saveChartAsPNG(File("results/${name}1b.png"), chartPanel.chart, 1600, 1200)
+        chartPanel.chart.xyPlot.domainAxis.setRange(20.0, 30.0)
+        ChartUtilities.saveChartAsPNG(File("results/${name}1c.png"), chartPanel.chart, 1600, 1200)
+        chartPanel.chart.xyPlot.domainAxis.setRange(30.0, 40.0)
+        ChartUtilities.saveChartAsPNG(File("results/${name}1d.png"), chartPanel.chart, 1600, 1200)
+        chartPanel.chart.xyPlot.domainAxis.setRange(40.0, 50.0)
+        ChartUtilities.saveChartAsPNG(File("results/${name}1e.png"), chartPanel.chart, 1600, 1200)
+        chartPanel.chart.xyPlot.domainAxis.setRange(50.0, 60.0)
+        ChartUtilities.saveChartAsPNG(File("results/${name}1f.png"), chartPanel.chart, 1600, 1200)
+        chartPanel.chart.xyPlot.domainAxis.setRange(60.0, 70.0)
+        ChartUtilities.saveChartAsPNG(File("results/${name}1g.png"), chartPanel.chart, 1600, 1200)
+        chartPanel.chart.xyPlot.domainAxis.setRange(70.0, 80.0)
+        ChartUtilities.saveChartAsPNG(File("results/${name}1h.png"), chartPanel.chart, 1600, 1200)
+        chartPanel.chart.xyPlot.domainAxis.setRange(80.0, 90.0)
+        ChartUtilities.saveChartAsPNG(File("results/${name}1i.png"), chartPanel.chart, 1600, 1200)
+        chartPanel.chart.xyPlot.domainAxis.setRange(90.0, 100.0)
+        ChartUtilities.saveChartAsPNG(File("results/${name}1j.png"), chartPanel.chart, 1600, 1200)
+
+        chartPanel.chart.xyPlot.domainAxis.setRange(0.0, 20.0)
+        ChartUtilities.saveChartAsPNG(File("results/${name}2a.png"), chartPanel.chart, 1600, 1200)
+        chartPanel.chart.xyPlot.domainAxis.setRange(20.0, 40.0)
+        ChartUtilities.saveChartAsPNG(File("results/${name}2b.png"), chartPanel.chart, 1600, 1200)
+        chartPanel.chart.xyPlot.domainAxis.setRange(40.0, 60.0)
+        ChartUtilities.saveChartAsPNG(File("results/${name}2c.png"), chartPanel.chart, 1600, 1200)
+        chartPanel.chart.xyPlot.domainAxis.setRange(60.0, 80.0)
+        ChartUtilities.saveChartAsPNG(File("results/${name}2d.png"), chartPanel.chart, 1600, 1200)
+        chartPanel.chart.xyPlot.domainAxis.setRange(80.0, 100.0)
+        ChartUtilities.saveChartAsPNG(File("results/${name}2e.png"), chartPanel.chart, 1600, 1200)
+
+        chartPanel.chart.xyPlot.domainAxis.setRange(0.0, 30.0)
+        ChartUtilities.saveChartAsPNG(File("results/${name}3a.png"), chartPanel.chart, 1600, 1200)
+        chartPanel.chart.xyPlot.domainAxis.setRange(30.0, 60.0)
+        ChartUtilities.saveChartAsPNG(File("results/${name}3b.png"), chartPanel.chart, 1600, 1200)
+        chartPanel.chart.xyPlot.domainAxis.setRange(60.0, 90.0)
+        ChartUtilities.saveChartAsPNG(File("results/${name}3c.png"), chartPanel.chart, 1600, 1200)
     }
 
     abstract fun setSeriesRendering(chart: JFreeChart, plot: XYPlot)
@@ -90,7 +128,7 @@ abstract class ChartDrawer(private val chartTitle: String) : JFrame() {
         )
         val plot = chart.xyPlot
         val renderer = XYLineAndShapeRenderer()
-        if(constantAxes) {
+        if (constantAxes) {
             plot.domainAxis.setRange(0.0, 50.0)
             plot.rangeAxis.setRange(0.0, 50.0)
         }
