@@ -3,7 +3,6 @@ package model
 import CROSSOVER_CHANCE
 import GAUSS_MUTATION
 import MUTATION_CHANCE
-import simulation.hvParetoFitnessFunction
 import kotlin.random.Random
 
 class DefensiveGenome(
@@ -11,20 +10,8 @@ class DefensiveGenome(
     parameters: MutableMap<Parameter, Double>,
     periodMonths: Int,
 ) : Genome(parameters, periodMonths) {
-    var bestDefensiveGenome: Genome? = null
-    var profitsWithDefensiveGenome: Double? = null
-    var riskWithDefensiveGenome: Double? = null
-    var strategyDetailsWithDefensiveGenome: List<StrategyDetails>? = null
 
-    fun getHvValue(): Double {
-        return if (profitsWithDefensiveGenome == null || riskWithDefensiveGenome == null) {
-            -Double.MAX_VALUE
-        } else {
-            hvParetoFitnessFunction(profitsWithDefensiveGenome!!, riskWithDefensiveGenome!!)
-        }
-    }
-
-    fun isOffensiveStrategy(shillersValue: Double) = getChoiceParameter() >= shillersValue
+    fun isTimeToSwitch(shillersValue: Double) = shillersValue < getChoiceParameter()
 
     fun getChoiceParameter() =
         (choiceParameter * (CHOICE_PARAMETER_RESTRICTIONS.second - CHOICE_PARAMETER_RESTRICTIONS.first)) +
@@ -64,9 +51,7 @@ class DefensiveGenome(
                 }
             }
             val genome1 = DefensiveGenome(child1ChoiceParameter, child1Parameters, periodMonths)
-            genome1.bestDefensiveGenome = bestDefensiveGenome
             val genome2 = DefensiveGenome(child2ChoiceParameter, child2Parameters, periodMonths)
-            genome2.bestDefensiveGenome = otherGenome.bestDefensiveGenome
             return Pair(genome1.clone(), genome2.clone())
         }
         return Pair(this.clone(), otherGenome.clone())
@@ -98,9 +83,7 @@ class DefensiveGenome(
                 }
             }
             val genome1 = DefensiveGenome(child1ChoiceParameter, child1Parameters, periodMonths)
-            genome1.bestDefensiveGenome = bestDefensiveGenome
             val genome2 = DefensiveGenome(child2ChoiceParameter, child2Parameters, periodMonths)
-            genome2.bestDefensiveGenome = otherGenome.bestDefensiveGenome
             return Pair(genome1, genome2)
         }
         return Pair(this.clone(), otherGenome.clone())
@@ -142,15 +125,7 @@ class DefensiveGenome(
         for (parameter in parameters) {
             newGenomeParameters[parameter.key] = parameter.value
         }
-        val output = DefensiveGenome(choiceParameter, newGenomeParameters, periodMonths)
-        output.bestDefensiveGenome = null
-        bestDefensiveGenome?.let {
-            output.bestDefensiveGenome = it.clone()
-        }
-        output.profitsWithDefensiveGenome = profitsWithDefensiveGenome
-        output.riskWithDefensiveGenome = riskWithDefensiveGenome
-        output.strategyDetailsWithDefensiveGenome = strategyDetailsWithDefensiveGenome
-        return output
+        return DefensiveGenome(choiceParameter, newGenomeParameters, periodMonths)
     }
 
     override fun equals(other: Any?): Boolean {
@@ -168,18 +143,6 @@ class DefensiveGenome(
                 return false
             }
         }
-        if (bestDefensiveGenome != other.bestDefensiveGenome) {
-            return false
-        }
-        if (profitsWithDefensiveGenome != other.profitsWithDefensiveGenome) {
-            return false
-        }
-        if (riskWithDefensiveGenome != other.riskWithDefensiveGenome) {
-            return false
-        }
-        if (strategyDetailsWithDefensiveGenome != other.strategyDetailsWithDefensiveGenome) {
-            return false
-        }
         return true
     }
 
@@ -187,10 +150,6 @@ class DefensiveGenome(
         var result = choiceParameter.hashCode()
         result = 19 * result + parameters.hashCode()
         result = 3 * result + periodMonths
-        result = 5 * result + (bestDefensiveGenome?.hashCode() ?: 0)
-        result = 7 * result + (profitsWithDefensiveGenome?.hashCode() ?: 0)
-        result = 11 * result + (riskWithDefensiveGenome?.hashCode() ?: 0)
-        result = 17 * result + (strategyDetailsWithDefensiveGenome?.hashCode() ?: 0)
         return result
     }
 

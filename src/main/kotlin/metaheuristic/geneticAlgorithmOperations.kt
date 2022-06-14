@@ -8,14 +8,14 @@ import NTGA2_GS_GENERATIONS
 import POPULATION_SIZE
 import SPEA2_NEAREST_DISTANCE
 import TOURNAMENT_PICKS
-import model.Genome
+import model.DefensiveGenome
 import model.OffensiveGenome
 import simulation.SimulationOutcome
 import kotlin.math.pow
 import kotlin.math.sqrt
 
-fun initializeGenomes(periodMonths: Int): List<Genome> {
-    val output = mutableListOf<Genome>()
+fun initializeGenomes(periodMonths: Int): List<DefensiveGenome> {
+    val output = mutableListOf<DefensiveGenome>()
     for (i in 0 until POPULATION_SIZE) {
         output += GenomeGenerator.generateDefensiveGenome(periodMonths)
     }
@@ -30,7 +30,7 @@ fun initializeOffensiveGenomes(periodMonths: Int): List<OffensiveGenome> {
     return output
 }
 
-fun getNewGenerationDefensiveGenomes(outcomes: List<SimulationOutcome>): List<Genome> {
+fun getNewGenerationDefensiveGenomes(outcomes: List<SimulationOutcome>): List<DefensiveGenome> {
     val selectedGenomes = selectWithTournament(outcomes).shuffled()
     return getMutatedGenomes(getCrossoverDefensiveGenomes(selectedGenomes))
 }
@@ -40,10 +40,10 @@ fun getNewGenerationOffensiveGenomes(outcomes: List<OffensiveGenome>, mutateBoth
     if (mutateBoth) {
         return getMutatedOffensiveGenomes(getCrossoverOffensiveGenomes(selectedGenomes))
     }
-    return getMutatedGenomes(getCrossoverOffensiveGenomes(selectedGenomes)) as List<OffensiveGenome>
+    return getMutatedOffensiveGenomesWithoutMutatingDefensive(getCrossoverOffensiveGenomes(selectedGenomes))
 }
 
-fun getNewGenerationDefensiveGenomesByRankAndVolume(outcomes: List<SimulationOutcome>): List<Genome> {
+fun getNewGenerationDefensiveGenomesByRankAndVolume(outcomes: List<SimulationOutcome>): List<DefensiveGenome> {
     val rankedOutcomes = getRankedDefensiveOutcomes(outcomes)
     val rankedOutcomesWithVolume = getRankedDefensiveOutcomesVolume(rankedOutcomes)
     val selectedGenomes = selectWithTournamentByRankAndVolume(rankedOutcomesWithVolume)
@@ -60,10 +60,10 @@ fun getNewGenerationOffensiveGenomesByRankAndVolume(
     if (mutateBoth) {
         return getMutatedOffensiveGenomes(getCrossoverOffensiveGenomes(selectedGenomes))
     }
-    return getMutatedGenomes(getCrossoverOffensiveGenomes(selectedGenomes)) as List<OffensiveGenome>
+    return getMutatedOffensiveGenomesWithoutMutatingDefensive(getCrossoverOffensiveGenomes(selectedGenomes)) as List<OffensiveGenome>
 }
 
-fun getNewGenerationDefensiveGenomesByStrength(outcomes: List<SimulationOutcome>): List<Genome> {
+fun getNewGenerationDefensiveGenomesByStrength(outcomes: List<SimulationOutcome>): List<DefensiveGenome> {
     val outcomesWithStrength = evaluateDefensiveGenomesStrength(outcomes)
     val outcomesWithFitness = evaluateDefensiveGenomesStrengthRawFitness(outcomesWithStrength)
     val outcomesWithCorrectFitness =
@@ -77,14 +77,14 @@ fun getNewGenerationDefensiveGenomesByStrength(outcomes: List<SimulationOutcome>
                 )
             )
         }
-    val binarySelectedGenomes = mutableListOf<Genome>()
+    val binarySelectedGenomes = mutableListOf<DefensiveGenome>()
     while (binarySelectedGenomes.size != POPULATION_SIZE) {
         val outcome1 = outcomesWithCorrectFitness.random()
         val outcome2 = outcomesWithCorrectFitness.random()
         binarySelectedGenomes += if (outcome1.second > outcome2.second) {
-            outcome1.first.genome.clone()
+            outcome1.first.genome.clone() as DefensiveGenome
         } else {
-            outcome2.first.genome.clone()
+            outcome2.first.genome.clone() as DefensiveGenome
         }
     }
     return getMutatedGenomes(getCrossoverDefensiveGenomes(binarySelectedGenomes))
@@ -125,28 +125,28 @@ fun getNewGenerationOffensiveGenomesByStrength(
     if (mutateBoth) {
         return getMutatedOffensiveGenomes(getCrossoverOffensiveGenomes(binarySelectedGenomes))
     }
-    return getMutatedGenomes(getCrossoverOffensiveGenomes(binarySelectedGenomes)) as List<OffensiveGenome>
+    return getMutatedOffensiveGenomesWithoutMutatingDefensive(getCrossoverOffensiveGenomes(binarySelectedGenomes)) as List<OffensiveGenome>
 }
 
 fun getNewGenerationDefensiveGenomesByNtgaMethod(
     generation: Int,
     outcomes: Collection<SimulationOutcome>,
     archive: Collection<SimulationOutcome>
-): List<Genome> {
+): List<DefensiveGenome> {
     val combined = outcomes + archive
     val selection = if (generation.mod(2 * NTGA2_GS_GENERATIONS) < NTGA2_GS_GENERATIONS) {
         val rankedOutcomes = getRankedDefensiveOutcomes(combined)
         val rankedOutcomesWithVolume = getRankedDefensiveOutcomesVolume(rankedOutcomes)
         selectWithTournamentByRankAndVolume(rankedOutcomesWithVolume)
     } else {
-        val selected = mutableListOf<Genome>()
+        val selected = mutableListOf<DefensiveGenome>()
         while (selected.size < POPULATION_SIZE) {
             selected += selectDefensiveGenomesWithGapSelection(combined).toList()
-                .map { it.genome.clone() }
+                .map { it.genome.clone() as DefensiveGenome }
         }
         selected
     }
-    val children = mutableListOf<Genome>()
+    val children = mutableListOf<DefensiveGenome>()
     for (i in 0 until POPULATION_SIZE / 2) {
         children += selection[i * 2].modularCrossover(selection[i * 2 + 1]).toList()
     }
@@ -363,14 +363,14 @@ private fun getRankedOffensiveOutcomes(outcomes: List<OffensiveGenome>): Mutable
 }
 
 private fun getRankedDefensiveOutcomesVolume(outcomes: List<Pair<SimulationOutcome, Int>>):
-        List<Triple<Genome, Int, Double>> {
-    val output = mutableListOf<Triple<Genome, Int, Double>>()
+        List<Triple<DefensiveGenome, Int, Double>> {
+    val output = mutableListOf<Triple<DefensiveGenome, Int, Double>>()
     var currentFront = 1
     outer@ while (output.size != outcomes.size) {
         val outcomesFromCurrentFront = outcomes.filter { it.second == currentFront }
         if (outcomesFromCurrentFront.size == 1) {
             output += Triple(
-                outcomesFromCurrentFront[0].first.genome.clone(),
+                outcomesFromCurrentFront[0].first.genome.clone() as DefensiveGenome,
                 outcomesFromCurrentFront[0].second,
                 1.0
             )
@@ -379,7 +379,7 @@ private fun getRankedDefensiveOutcomesVolume(outcomes: List<Pair<SimulationOutco
         val sortedByProfitsOutcomes = outcomesFromCurrentFront.sortedBy { it.first.profits }
         for (i in sortedByProfitsOutcomes.indices) {
             output += Triple(
-                sortedByProfitsOutcomes[i].first.genome.clone(),
+                sortedByProfitsOutcomes[i].first.genome.clone() as DefensiveGenome,
                 sortedByProfitsOutcomes[i].second,
                 when (i) {
                     0 -> sortedByProfitsOutcomes[1].first.profits * sortedByProfitsOutcomes[1].first.risk
@@ -429,11 +429,11 @@ private fun getRankedOffensiveOutcomesVolume(outcomes: List<Pair<OffensiveGenome
     return output
 }
 
-fun selectWithTournament(outcomes: List<SimulationOutcome>): List<Genome> {
-    val output = mutableListOf<Genome>()
+fun selectWithTournament(outcomes: List<SimulationOutcome>): List<DefensiveGenome> {
+    val output = mutableListOf<DefensiveGenome>()
     while (output.size < POPULATION_SIZE - ELITISM) {
         val tournament = outcomes.shuffled().take(TOURNAMENT_PICKS)
-        output += tournament.maxByOrNull { it.getHvValue() }!!.genome.clone()
+        output += tournament.maxByOrNull { it.getHvValue() }!!.genome.clone() as DefensiveGenome
     }
     return output
 }
@@ -554,8 +554,19 @@ private fun getEuclideanNeighbors(
     return outcomesWithDistances.take(2).toList()
 }
 
-private fun getMutatedGenomes(genomes: List<Genome>): List<Genome> {
-    val output = mutableListOf<Genome>()
+private fun getMutatedGenomes(genomes: List<DefensiveGenome>): List<DefensiveGenome> {
+    val output = mutableListOf<DefensiveGenome>()
+    for (genome in genomes) {
+        output += genome.clone()
+    }
+    for (genome in output) {
+        genome.mutate()
+    }
+    return output
+}
+
+private fun getMutatedOffensiveGenomesWithoutMutatingDefensive(genomes: List<OffensiveGenome>): List<OffensiveGenome> {
+    val output = mutableListOf<OffensiveGenome>()
     for (genome in genomes) {
         output += genome.clone()
     }
@@ -579,8 +590,8 @@ private fun getMutatedOffensiveGenomes(genomes: List<OffensiveGenome>): List<Off
     return output
 }
 
-private fun getCrossoverDefensiveGenomes(genomes: List<Genome>): List<Genome> {
-    val output = mutableListOf<Genome>()
+private fun getCrossoverDefensiveGenomes(genomes: List<DefensiveGenome>): List<DefensiveGenome> {
+    val output = mutableListOf<DefensiveGenome>()
     for (i in genomes.indices step 2) {
         if (i + 1 == genomes.size) {
             output += genomes[i].clone()

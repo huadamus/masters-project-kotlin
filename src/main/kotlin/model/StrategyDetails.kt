@@ -20,31 +20,35 @@ data class StrategyDetails(
         }, ${crbInvested.round()}, ${goldInvested.round()}" +
                 ", final: ${developedFinal.round()}, ${emergingFinal.round()}, ${crbFinal.round()}, ${
                     goldFinal.round()
-                }, profits: ${getDevelopedProfitPercentage().round()}%, ${
-                    getEmergingProfitPercentage().round()
-                }%, ${getCrbProfitPercentage().round()}%, ${getGoldProfitPercentage().round()}%}"
+                }, yearly adjusted profits: ${getDevelopedProfitPercentage(period.first.getMonthsBetween(period.second)).round()}%, ${
+                    getEmergingProfitPercentage(period.first.getMonthsBetween(period.second)).round()
+                }%, ${getCrbProfitPercentage(period.first.getMonthsBetween(period.second)).round()}%, ${
+                    getGoldProfitPercentage(
+                        period.first.getMonthsBetween(period.second)
+                    ).round()
+                }%}"
     }
 
-    private fun getDevelopedProfitPercentage(): Double = if (developedInvested > 0.0) {
-        (developedFinal / developedInvested - 1.0) * 100.0
+    private fun getDevelopedProfitPercentage(months: Int): Double = if (developedInvested > 0.0) {
+        (developedFinal / developedInvested - 1.0) * 100.0 * (12.0 / months.toDouble())
     } else {
         0.0
     }
 
-    private fun getEmergingProfitPercentage(): Double = if (emergingInvested > 0.0) {
-        (emergingFinal / emergingInvested - 1.0) * 100.0
+    private fun getEmergingProfitPercentage(months: Int): Double = if (emergingInvested > 0.0) {
+        (emergingFinal / emergingInvested - 1.0) * 100.0 * (12.0 / months.toDouble())
     } else {
         0.0
     }
 
-    private fun getCrbProfitPercentage(): Double = if (crbInvested > 0.0) {
-        (crbFinal / crbInvested - 1.0) * 100.0
+    private fun getCrbProfitPercentage(months: Int): Double = if (crbInvested > 0.0) {
+        (crbFinal / crbInvested - 1.0) * 100.0 * (12.0 / months.toDouble())
     } else {
         0.0
     }
 
-    private fun getGoldProfitPercentage(): Double = if (goldInvested > 0.0) {
-        (goldFinal / goldInvested - 1.0) * 100.0
+    private fun getGoldProfitPercentage(months: Int): Double = if (goldInvested > 0.0) {
+        (goldFinal / goldInvested - 1.0) * 100.0 * (12.0 / months.toDouble())
     } else {
         0.0
     }

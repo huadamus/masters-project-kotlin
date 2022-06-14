@@ -69,15 +69,12 @@ class ConfigurationTestExperiment : Experiment("configuration") {
             genericGeneticAlgorithmNtga2State =
                 (Runner.runCombining(genericGeneticAlgorithmNtga2, state[0], RUNS) as GenericGeneticAlgorithmState)
         } / 1000
-        CROSSOVER_CHANCE = ntga2ConfigurationParameters[0] as Double
-        MUTATION_CHANCE = ntga2ConfigurationParameters[1] as Double
-        TOURNAMENT_PICKS = ntga2ConfigurationParameters[2] as Int
+        genericGeneticAlgorithmNtga2State.save(genericNtgaName)
         timeValues += measureTimeMillis {
             coevolutionGeneticAlgorithmNtga2State = (Runner.runCombining(
                 coevolutionGeneticAlgorithmNtga2, state[1], RUNS
             ) as CoevolutionGeneticAlgorithmState)
         } / 1000
-        genericGeneticAlgorithmNtga2State.save(genericNtgaName)
         coevolutionGeneticAlgorithmNtga2State.save(coevolutionNtgaName)
     }
 

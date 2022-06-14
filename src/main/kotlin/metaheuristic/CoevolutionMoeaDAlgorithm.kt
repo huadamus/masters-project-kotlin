@@ -9,7 +9,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import model.Date
-import model.Genome
+import model.DefensiveGenome
 import model.OffensiveGenome
 import simulation.GenomeGenerator
 import simulation.SimulationOutcome
@@ -50,7 +50,7 @@ class CoevolutionMoeaDAlgorithm(
         var defensiveGenomesPopulation = state.defensiveGenomesPopulation.toList()
         var archive = state.archive.toMutableSet()
 
-        var bestLastDefensiveGenomes: MutableList<Genome>? = null
+        var bestLastDefensiveGenomes: MutableList<DefensiveGenome>? = null
 
         for (i in 0 until GENERATIONS) {
             println("$logString, Run ${runId + 1}, Generation ${i + 1}/$GENERATIONS, archive size: ${archive.size}")
@@ -137,7 +137,7 @@ class CoevolutionMoeaDAlgorithm(
                 simulationOutcome.genome = it.bestDefensiveGenome!!.clone()
                 simulationOutcome
             }
-            bestLastDefensiveGenomes = defensiveOutcomes.map { it.genome }.toMutableList()
+            bestLastDefensiveGenomes = defensiveOutcomes.map { it.genome as DefensiveGenome }.toMutableList()
 
             archive += paretoEvaluateOffensiveGenomes(assignedOffensivePopulation).toList()
             archive = paretoEvaluateOffensiveGenomes(archive.toList()).toMutableSet()
@@ -262,7 +262,7 @@ class CoevolutionMoeaDAlgorithm(
 
     private fun getCombinedRandomGenome(
         offensiveGenome: OffensiveGenome,
-        potentialDefensiveGenomes: List<Genome>,
+        potentialDefensiveGenomes: List<DefensiveGenome>,
     ): OffensiveGenome {
         val output = offensiveGenome.clone()
         output.bestDefensiveGenome = potentialDefensiveGenomes.random().clone()

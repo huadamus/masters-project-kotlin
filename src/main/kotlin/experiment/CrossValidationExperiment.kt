@@ -7,6 +7,7 @@ import log
 import metaheuristic.*
 import model.Date
 import model.OffensiveGenome
+import model.StrategyDetails
 import output.CrossValidation18to21ChartDrawer
 import output.CrossValidationChartDrawer
 import output.OutputPrintingManager
@@ -28,7 +29,7 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
             }
             val trainingPeriods = dataset.third - testPeriods.toSet()
             val name = "${name}_iteration_${i + 1}"
-            val algorithm = CoevolutionGeneticAlgorithm(
+            val algorithm = GenericGeneticAlgorithm(
                 name,
                 "Simulation for cross-validation - iteration ${i + 1}",
                 trainingPeriods,
@@ -44,7 +45,7 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
             )
             geneticAlgorithms += algorithm
             var state = loadState(i)
-            state = Runner.runCombining(algorithm, state, RUNS) as CoevolutionGeneticAlgorithmState
+            state = Runner.runCombining(algorithm, state, RUNS) as GenericGeneticAlgorithmState
             state.save(name)
         }
     }
@@ -220,12 +221,13 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
                 DataLoader.loadShillerPESP500Ratio(),
                 DataLoader.loadDowToGoldData()
             )
-            iterationOutcomes += tester.test(archive[i].toList()).map {
+            iterationOutcomes += tester.test(archive[i].toList()).map { offensiveGenome ->
                 val output = SimulationOutcome(
-                    it.profitsWithDefensiveGenome!!,
-                    it.riskWithDefensiveGenome!!
+                    offensiveGenome.strategyDetailsWithDefensiveGenome!!.map { it.getTotalYearlyAverageProfit(18) }
+                        .average(),
+                    offensiveGenome.riskWithDefensiveGenome!!
                 )
-                output.genome = it
+                output.genome = offensiveGenome
                 output
             }
         }
@@ -252,13 +254,20 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
         CrossValidation18to21ChartDrawer().saveChart("cross_validation_validation_set", validationOutcomes)
     }
 
-    private fun loadState(iteration: Int): CoevolutionGeneticAlgorithmState {
+    private fun loadState(iteration: Int): GenericGeneticAlgorithmState {
         var coevolutionGeneticAlgorithmState =
-            CoevolutionGeneticAlgorithmState.load("${name}_iteration_${iteration + 1}")
+            GenericGeneticAlgorithmState.load("${name}_iteration_${iteration + 1}")
         if (coevolutionGeneticAlgorithmState == null) {
             coevolutionGeneticAlgorithmState =
-                geneticAlgorithms[iteration].getEmptyState() as CoevolutionGeneticAlgorithmState
+                geneticAlgorithms[iteration].getEmptyState() as GenericGeneticAlgorithmState
         }
         return coevolutionGeneticAlgorithmState
+    }
+
+    fun StrategyDetails.getTotalYearlyAverageProfit(months: Int): Double {
+        if(developedInvested + emergingInvested + crbInvested + goldInvested == 0.0) {
+            return 0.0
+        }
+        return ((developedFinal + emergingFinal + crbFinal + goldFinal) / (developedInvested + emergingInvested + crbInvested + goldInvested) - 1.0) * 100.0 * (12.0 / months.toDouble())
     }
 }

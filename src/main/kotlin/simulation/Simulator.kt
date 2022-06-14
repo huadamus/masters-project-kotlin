@@ -1,13 +1,10 @@
 package simulation
 
+import model.*
 import simulation.portfolio.ActiveManagementPortfolio
 import simulation.portfolio.BuyAndHoldPortfolio
 import simulation.portfolio.ParameterizedPortfolio
 import simulation.portfolio.Portfolio
-import model.Date
-import model.Genome
-import model.OffensiveGenome
-import model.StrategyDetails
 
 object Simulator {
 
@@ -46,7 +43,7 @@ object Simulator {
 
     private fun calculateScoreForDoubleGenome(
         offensiveGenome: OffensiveGenome,
-        defensiveGenome: Genome,
+        defensiveGenome: DefensiveGenome,
         selling: Boolean,
         periods: List<Pair<Date, Date>>,
         developedData: Map<Date, Double>,
@@ -83,7 +80,7 @@ object Simulator {
         return CalculationsOutcome(
             offensiveGenome,
             defensiveGenome,
-            profits,
+            profits / periods.size.toDouble(),
             maxRisk,
             strategyDetails
         )
@@ -143,7 +140,7 @@ object Simulator {
         dowToGoldData: Map<Date, Double>,
         shillerSP500PERatioData: Map<Date, Double>,
         offensiveGenome: OffensiveGenome,
-        defensiveGenome: Genome,
+        defensiveGenome: DefensiveGenome,
         selling: Boolean,
     ): Triple<Double, Double, StrategyDetails> {
         val portfolio = ParameterizedPortfolio(

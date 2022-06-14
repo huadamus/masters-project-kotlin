@@ -1,14 +1,15 @@
 package simulation
 
-import model.Genome
+import model.DefensiveGenome
 import model.OffensiveGenome
 import model.Parameter
 import kotlin.random.Random
 
 object GenomeGenerator {
 
-    fun generateDefensiveGenome(periodMonths: Int): Genome {
-        return Genome(
+    fun generateDefensiveGenome(periodMonths: Int): DefensiveGenome {
+        return DefensiveGenome(
+            getRandomChoiceParameter(),
             getRandomParameters(),
             periodMonths
         )

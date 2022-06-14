@@ -26,12 +26,12 @@ class ParametrizationExperiment : Experiment("parametrization") {
         SelectionMethod.NTGA2,
         null
     )
-    private val crossoverChanceSet = IntRange(70, 90) step 5
+    private val crossoverChanceSet = IntRange(70, 90) step 10
     private val mutationChanceSet = IntRange(6, 12) step 3
-    private val tournamentPicksSet = IntRange(8, 24) step 4
-    private val spea2NearestDistanceParameterSet = IntRange(1, 11) step 2
-    private val ntga2GsGenerationsSet = IntRange(1, 51) step 10
-    private val moeaDTSet = IntRange(2, 14) step 3
+    private val tournamentPicksSet = IntRange(8, 24) step 8
+    private val spea2NearestDistanceParameterSet = listOf(1, 5, 10)
+    private val ntga2GsGenerationsSet = listOf(1, 20, 40)
+    private val moeaDTSet = listOf(2, 6, 12)
 
     override fun run() {
         for (method in methodsSet) {

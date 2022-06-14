@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import model.Date
+import model.DefensiveGenome
 import simulation.Simulator
 import java.util.*
 
@@ -49,7 +50,7 @@ class CoevolutionGeneticAlgorithm(
         var defensiveGenomesPopulation = state.defensiveGenomesPopulation.toList()
         var archive = state.archive.toMutableSet()
 
-        var bestLastDefensiveGenome: Genome? = null
+        var bestLastDefensiveGenome: DefensiveGenome? = null
 
         for (i in 0 until GENERATIONS) {
             val matchWithRandomOutcomes = calculateFinalPopulationFitness(
@@ -124,7 +125,7 @@ class CoevolutionGeneticAlgorithm(
                 simulationOutcome
             }
             val bestDefensiveOutcome = defensiveOutcomes.maxByOrNull { it.getHvValue() }
-            bestLastDefensiveGenome = bestDefensiveOutcome!!.genome.clone()
+            bestLastDefensiveGenome = bestDefensiveOutcome!!.genome.clone() as DefensiveGenome
 
             println(
                 "$logString, Run ${runId + 1}, Generation ${i + 1}/$GENERATIONS, archive size: ${
@@ -142,11 +143,11 @@ class CoevolutionGeneticAlgorithm(
                     output
                 }
 
-            archive += paretoEvaluateOffensiveGenomes(assignedOffensivePopulation).toList()
+            archive += paretoEvaluateOffensiveGenomes(assignedOffensivePopulation.toList()).toList()
             archive = paretoEvaluateOffensiveGenomes(archive.toList()).toMutableSet()
 
             val newOffensivePopulation = mutableListOf<OffensiveGenome>()
-            val newDefensivePopulation = mutableListOf<Genome>()
+            val newDefensivePopulation = mutableListOf<DefensiveGenome>()
             newOffensivePopulation.addAll(assignedOffensivePopulation
                 .sortedByDescending { it.getHvValue() }
                 .take(ELITISM)
@@ -154,7 +155,7 @@ class CoevolutionGeneticAlgorithm(
             newDefensivePopulation.addAll(
                 defensiveOutcomes.sortedByDescending { it.getHvValue() }
                     .take(ELITISM)
-                    .map { it.genome.clone() })
+                    .map { it.genome.clone() as DefensiveGenome })
             when (selectionMethod) {
                 SelectionMethod.HV_PARETO -> {
                     offensiveGenomesPopulation = newOffensivePopulation +
@@ -252,7 +253,7 @@ class CoevolutionGeneticAlgorithm(
 
     private fun getCombinedRandomGenomes(
         offensiveGenomes: List<OffensiveGenome>,
-        defensiveGenomes: List<Genome>,
+        defensiveGenomes: List<DefensiveGenome>,
     ): List<OffensiveGenome> {
         val shuffledDefensiveGenomes = defensiveGenomes.shuffled().toMutableList()
         return offensiveGenomes.map {
@@ -264,7 +265,7 @@ class CoevolutionGeneticAlgorithm(
 
     private fun getCombinedBestGenomes(
         offensiveGenomes: List<OffensiveGenome>,
-        bestDefensiveGenome: Genome,
+        bestDefensiveGenome: DefensiveGenome,
     ) = offensiveGenomes.map {
         val out = it.clone()
         out.bestDefensiveGenome = bestDefensiveGenome.clone()

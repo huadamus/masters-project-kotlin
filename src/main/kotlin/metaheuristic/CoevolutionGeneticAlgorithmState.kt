@@ -1,12 +1,13 @@
 package metaheuristic
 
+import model.DefensiveGenome
 import model.Genome
 import model.OffensiveGenome
 import java.io.*
 
 data class CoevolutionGeneticAlgorithmState(
     val offensiveGenomesPopulation: List<OffensiveGenome>,
-    val defensiveGenomesPopulation: List<Genome>,
+    val defensiveGenomesPopulation: List<DefensiveGenome>,
     val archive: Set<OffensiveGenome>,
 ) : GeneticAlgorithmState, Serializable {
 

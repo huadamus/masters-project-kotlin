@@ -11,7 +11,7 @@ class OffensiveGenome(
     parameters: MutableMap<Parameter, Double>,
     periodMonths: Int,
 ) : Genome(parameters, periodMonths) {
-    var bestDefensiveGenome: Genome? = null
+    var bestDefensiveGenome: DefensiveGenome? = null
     var profitsWithDefensiveGenome: Double? = null
     var riskWithDefensiveGenome: Double? = null
     var strategyDetailsWithDefensiveGenome: List<StrategyDetails>? = null
@@ -24,7 +24,7 @@ class OffensiveGenome(
         }
     }
 
-    fun isOffensiveStrategy(shillersValue: Double) = getChoiceParameter() >= shillersValue
+    fun isTimeToSwitch(shillersValue: Double) = shillersValue > getChoiceParameter()
 
     fun getChoiceParameter() =
         (choiceParameter * (CHOICE_PARAMETER_RESTRICTIONS.second - CHOICE_PARAMETER_RESTRICTIONS.first)) +

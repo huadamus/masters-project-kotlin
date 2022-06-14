@@ -11,26 +11,26 @@ import kotlin.system.measureTimeMillis
 //metaheuristic
 const val POPULATION_SIZE = 100
 const val MOEA_D_VECTORS_COUNT = 100
-const val GENERATIONS = 2500
+const val GENERATIONS = 3000
 var CROSSOVER_CHANCE = 0.80
 var MUTATION_CHANCE = 0.09
 var TOURNAMENT_PICKS = 16
 var SPEA2_NEAREST_DISTANCE = 8
-var NTGA2_GS_GENERATIONS = 18
-var MOEA_D_T = 6
+var NTGA2_GS_GENERATIONS = 2
+var MOEA_D_T = 5
 var GAUSS_MUTATION = true
 const val ELITISM = 0
 
-val eaHvConfigurationParameters = listOf(0.80, 0.10, 14)
-val nsgaIIConfigurationParameters = listOf(0.80, 0.09, 18)
-val spea2ConfigurationParameters = listOf(0.78, 0.11, 14)
-val ntga2ConfigurationParameters = listOf(0.77, 0.09, 17)
-val moeaDConfigurationParameters = listOf(0.80, 0.10)
+val eaHvConfigurationParameters = listOf(0.79, 0.087, 15)
+val nsgaIIConfigurationParameters = listOf(0.76, 0.087, 18)
+val spea2ConfigurationParameters = listOf(0.77, 0.069, 17)
+val ntga2ConfigurationParameters = listOf(0.73, 0.087, 18)
+val moeaDConfigurationParameters = listOf(0.83, 0.111)
 
 //simulation
 val CROSS_VALIDATION_DATASET = CROSS_VALIDATION_DATASET_72_72
 const val TESTING_PERIODS = 2
-const val RUNS = 1
+const val RUNS = 10
 
 //technical
 val logFile = File("results/log.txt")
@@ -54,8 +54,8 @@ fun main(args: Array<String>) {
         //runGaussMutationExperiment()
         //log("conf")
         //runConfigurationsExperiment()
-        runConfigurationsTestExperiment()
-        //runCrossValidationExperiment()
+        //runConfigurationsTestExperiment()
+        runCrossValidationExperiment()
         //measureMaxSp500Falls()
     }
     log("Total time: ${time / 1000}s")
@@ -83,7 +83,7 @@ private fun runGaussMutationExperiment() {
 
 private fun runConfigurationsExperiment() {
     val configurationExperiment = ConfigurationExperiment()
-    configurationExperiment.run()
+    //configurationExperiment.run()
     configurationExperiment.showResults()
 }
 

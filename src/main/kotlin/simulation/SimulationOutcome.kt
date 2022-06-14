@@ -1,5 +1,6 @@
 package simulation
 
+import model.DefensiveGenome
 import model.Genome
 import output.round
 import java.io.ObjectInputStream
@@ -64,7 +65,7 @@ class SimulationOutcome(
     }
 
     private fun readObject(ois: ObjectInputStream) {
-        genome = ois.readObject() as Genome
+        genome = ois.readObject() as DefensiveGenome
         profits = ois.readDouble()
         risk = ois.readDouble()
     }
