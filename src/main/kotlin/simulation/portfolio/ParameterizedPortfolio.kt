@@ -71,7 +71,7 @@ class ParameterizedPortfolio(
     private fun manageEmerging(date: Date) {
         val trailingPeriod = genome.getParameter(Parameter.EMERGING_TRAILING_PERIOD_MONTHS).toInt()
         val maximumRatioPercentage =
-            (historicalDataStore.getEmergingTrailMaximum(trailingPeriod) / historicalDataStore.lastEmergingPrice - 1.0 * 100.0)
+            ((historicalDataStore.getEmergingTrailMaximum(trailingPeriod) / historicalDataStore.lastEmergingPrice - 1.0) * 100.0)
         if (maximumRatioPercentage >= genome.getParameter(Parameter.EMERGING_BUYING_PERCENT_CHANGE)
             || historicalDataStore.lastShillerSP500PERatio
             >= genome.getParameter(Parameter.EMERGING_ALWAYS_BUYING_OVER_SHILLER_PE)
@@ -83,7 +83,7 @@ class ParameterizedPortfolio(
     private fun manageCrb(date: Date) {
         val trailingPeriod = genome.getParameter(Parameter.CRB_TRAILING_PERIOD_MONTHS).toInt()
         val maximumRatioPercentage =
-            (historicalDataStore.getCrbTrailMaximum(trailingPeriod) / historicalDataStore.lastCrbPrice - 1.0 * 100.0)
+            ((historicalDataStore.getCrbTrailMaximum(trailingPeriod) / historicalDataStore.lastCrbPrice - 1.0) * 100.0)
         if (maximumRatioPercentage >= genome.getParameter(Parameter.CRB_BUYING_PERCENT_CHANGE)
             || historicalDataStore.lastCrbPrice
             <= genome.getParameter(Parameter.CRB_ALWAYS_BUYING_PRICE)
