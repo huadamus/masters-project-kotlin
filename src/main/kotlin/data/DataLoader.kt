@@ -13,6 +13,9 @@ object DataLoader {
     private const val GOLD_USD_DATA_FILENAME = "data/gold_usd.csv"
     private const val SHILLER_PE_SP500_DATA_FILENAME = "data/shiller_sp_500_pe_ratio.csv"
     private const val DOW_TO_GOLD_RATIO_DATA_FILENAME = "data/dow_to_gold_ratio.csv"
+    private const val DEVELOPED_DAILY_DATA_FILENAME = "data/msci_world_daily.csv"
+    private const val EMERGING_DAILY_DATA_FILENAME = "data/msci_emerging_daily.csv"
+    private const val DOW_JONES_DATA_FILENAME = "data/dow_jones.csv"
 
     private var developedData: Map<Date, Double>? = null
     private var emergingData: Map<Date, Double>? = null
@@ -20,17 +23,18 @@ object DataLoader {
     private var goldUsdData: Map<Date, Double>? = null
     private var shillerPESP500RatioData: Map<Date, Double>? = null
     private var dowToGoldRatioData: Map<Date, Double>? = null
+    private var dowJonesData: Map<Date, Double>? = null
 
     fun loadDevelopedData(): Map<Date, Double> {
         if (developedData == null) {
-            developedData = loadGenericData(DEVELOPED_DATA_FILENAME)
+            developedData = loadStockMarketData(DEVELOPED_DAILY_DATA_FILENAME)
         }
         return developedData!!
     }
 
     fun loadEmergingData(): Map<Date, Double> {
         if (emergingData == null) {
-            emergingData = loadGenericData(EMERGING_DATA_FILENAME)
+            emergingData = loadGenericData(EMERGING_DAILY_DATA_FILENAME)
         }
         return emergingData!!
     }
@@ -64,10 +68,33 @@ object DataLoader {
         return shillerPESP500RatioData!!
     }
 
-    fun loadDowToGoldData(): Map<Date, Double> {
-        if (dowToGoldRatioData == null) {
-            dowToGoldRatioData = loadGenericData(DOW_TO_GOLD_RATIO_DATA_FILENAME)
+    private fun loadDowJonesData(): Map<Date, Double> {
+        if (dowJonesData == null) {
+            dowJonesData = loadStockMarketData(DOW_JONES_DATA_FILENAME)
         }
+        return dowJonesData!!
+    }
+
+    fun loadDowToGoldData(): Map<Date, Double> {
+        loadGoldUsdData()
+        loadDowJonesData()
+        val initialDate = Date(27, 12, 1987)
+        val endDate = Date(1, 1, 2021)
+        var currentDate = initialDate
+        var previousDowJones = 0.0
+        var previousGold = 0.0
+        val dowToGoldRatio = mutableMapOf<Date, Double>()
+        while(currentDate < endDate) {
+            if(dowJonesData!!.contains(currentDate)) {
+                previousDowJones = dowJonesData!![currentDate]!!
+            }
+            if(goldUsdData!!.contains(currentDate)) {
+                previousGold = goldUsdData!![currentDate]!!
+            }
+            dowToGoldRatio += Pair(currentDate, previousDowJones / previousGold)
+            currentDate = currentDate.getRelativeDay(1)
+        }
+        dowToGoldRatioData = dowToGoldRatio
         return dowToGoldRatioData!!
     }
 

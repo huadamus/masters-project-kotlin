@@ -3,6 +3,7 @@
 import devtools.getTrainingAndTestPeriods
 import model.Date
 import data.CROSS_VALIDATION_DATASET_72_72
+import data.CROSS_VALIDATION_DATASET_DAILY
 import data.DataLoader
 import experiment.*
 import java.io.File
@@ -11,7 +12,7 @@ import kotlin.system.measureTimeMillis
 //metaheuristic
 const val POPULATION_SIZE = 100
 const val MOEA_D_VECTORS_COUNT = 100
-const val GENERATIONS = 3000
+const val GENERATIONS = 3200
 var CROSSOVER_CHANCE = 0.80
 var MUTATION_CHANCE = 0.09
 var TOURNAMENT_PICKS = 16
@@ -28,9 +29,9 @@ val ntga2ConfigurationParameters = listOf(0.73, 0.087, 18)
 val moeaDConfigurationParameters = listOf(0.83, 0.111)
 
 //simulation
-val CROSS_VALIDATION_DATASET = CROSS_VALIDATION_DATASET_72_72
+val CROSS_VALIDATION_DATASET = CROSS_VALIDATION_DATASET_DAILY
 const val TESTING_PERIODS = 2
-const val RUNS = 10
+const val RUNS = 4
 
 //technical
 val logFile = File("results/log.txt")
@@ -83,7 +84,7 @@ private fun runGaussMutationExperiment() {
 
 private fun runConfigurationsExperiment() {
     val configurationExperiment = ConfigurationExperiment()
-    //configurationExperiment.run()
+    configurationExperiment.run()
     configurationExperiment.showResults()
 }
 
@@ -95,7 +96,7 @@ private fun runConfigurationsTestExperiment() {
 
 private fun runCrossValidationExperiment() {
     val crossValidationExperiment = CrossValidationExperiment(CROSS_VALIDATION_DATASET)
-    //crossValidationExperiment.run()
+    crossValidationExperiment.run()
     crossValidationExperiment.showResults()
 }
 

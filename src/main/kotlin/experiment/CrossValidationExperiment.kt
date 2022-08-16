@@ -140,7 +140,7 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
                 }"
             )
             printParametersTable(
-                iterationOutcomes[0] + iterationOutcomes[3] + iterationOutcomes[6] + iterationOutcomes[9] + iterationOutcomes[12],
+                iterationOutcomes[0] + iterationOutcomes[3] + iterationOutcomes[6] + iterationOutcomes[9],// + iterationOutcomes[12],
                 iterationOutcomes[i * 3]
             )
             log("${finalTestPeriods[i]} buy-and-hold score: ${iterationOutcomes[i * 3 + 1][0]}")

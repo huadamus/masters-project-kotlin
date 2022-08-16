@@ -14,10 +14,10 @@ abstract class Portfolio(private val startDate: Date) {
     protected var goldSaleProfits = 0.0
     fun handle(date: Date) {
         historicalDataStore.updateLastPrices(date)
-        if (date.isNewMonth()) {
-            historicalDataStore.updateTrails(date)
-            if (date >= startDate) {
-                handleDetails(date)
+        historicalDataStore.updateTrails(date)
+        if (date >= startDate) {
+            handleDetails(date)
+            if (date.isNewMonth()) {
                 monthlyBalanceProportionValues.add(getBalanceProportion())
             }
         }
@@ -78,28 +78,28 @@ abstract class Portfolio(private val startDate: Date) {
     }
 
     protected fun buyDeveloped(date: Date) {
-        val developedPurchase = buyAssetReturnNumberAndCost(historicalDataStore.lastDevelopedPrice)
+        val developedPurchase = buyAssetReturnNumberAndCost(date, historicalDataStore.lastDevelopedPrice)
         assets.add(Asset(Asset.Type.DEVELOPED, date.copy(), developedPurchase.first, developedPurchase.second))
     }
 
     protected fun buyEmerging(date: Date) {
-        val emergingPurchase = buyAssetReturnNumberAndCost(historicalDataStore.lastEmergingPrice)
+        val emergingPurchase = buyAssetReturnNumberAndCost(date, historicalDataStore.lastEmergingPrice)
         assets.add(Asset(Asset.Type.EMERGING, date.copy(), emergingPurchase.first, emergingPurchase.second))
     }
 
     protected fun buyCrb(date: Date) {
-        val crbPurchase = buyAssetReturnNumberAndCost(historicalDataStore.lastCrbPrice)
+        val crbPurchase = buyAssetReturnNumberAndCost(date, historicalDataStore.lastCrbPrice)
         assets.add(Asset(Asset.Type.CRB, date.copy(), crbPurchase.first, crbPurchase.second))
     }
 
     protected fun buyGold(date: Date) {
-        val goldPurchase = buyAssetReturnNumberAndCost(historicalDataStore.lastGoldPrice)
+        val goldPurchase = buyAssetReturnNumberAndCost(date, historicalDataStore.lastGoldPrice)
         assets.add(Asset(Asset.Type.GOLD, date.copy(), goldPurchase.first, goldPurchase.second))
     }
 
-    private fun buyAssetReturnNumberAndCost(price: Double): Pair<Int, Double> {
+    private fun buyAssetReturnNumberAndCost(date: Date, price: Double): Pair<Int, Double> {
         if(price <= 0.0) {
-            throw Exception("Price is not a positive number!")
+            throw Exception("Price ($price) at date $date is not a positive number!")
         }
         var resourcesLeft = RESOURCES_FOR_ONE_TRANSACTION
         var totalPurchased = 0

@@ -12,6 +12,7 @@ data class StrategyDetails(
     val emergingFinal: Double,
     val crbFinal: Double,
     val goldFinal: Double,
+    val totalTransactions: Int,
 ) : java.io.Serializable {
 
     override fun toString(): String {
@@ -26,7 +27,7 @@ data class StrategyDetails(
                     getGoldProfitPercentage(
                         period.first.getMonthsBetween(period.second)
                     ).round()
-                }%}"
+                }%, total transactions: $totalTransactions}"
     }
 
     private fun getDevelopedProfitPercentage(months: Int): Double = if (developedInvested > 0.0) {

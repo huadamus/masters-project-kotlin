@@ -17,6 +17,7 @@ class ParameterizedPortfolio(
 ) : Portfolio(startDate) {
 
     var genome: Genome = offensiveGenome
+    var totalTransactions = 0
 
     init {
         historicalDataStore = HistoricalDataStore(
@@ -30,23 +31,13 @@ class ParameterizedPortfolio(
     }
 
     override fun handleDetails(date: Date) {
-        if (historicalDataStore.lastShillerSP500PERatio > offensiveGenome.getChoiceParameter()) {
-            genome = defensiveGenome.clone()
-        } else {
-            genome = offensiveGenome.clone()
+        if(date.isNewMonth()) {
+            genome = if (historicalDataStore.lastShillerSP500PERatio > offensiveGenome.getChoiceParameter()) {
+                defensiveGenome.clone()
+            } else {
+                offensiveGenome.clone()
+            }
         }
-//        if(genome is OffensiveGenome) {
-//            if(offensiveGenome.isTimeToSwitch(historicalDataStore.lastShillerSP500PERatio)) {
-//                genome = defensiveGenome.clone()
-//            }
-//        } else {
-//            if(genome is DefensiveGenome) {
-//                if(defensiveGenome.isTimeToSwitch(historicalDataStore.lastShillerSP500PERatio)) {
-//                    genome = offensiveGenome.clone()
-//                }
-//            }
-//        }
-        //println(genome is OffensiveGenome)
         manageDeveloped(date)
         manageEmerging(date)
         manageCrb(date)
@@ -57,7 +48,7 @@ class ParameterizedPortfolio(
     }
 
     private fun manageDeveloped(date: Date) {
-        val trailingPeriod = genome.getParameter(Parameter.DEVELOPED_TRAILING_PERIOD_MONTHS).toInt()
+        val trailingPeriod = genome.getParameter(Parameter.DEVELOPED_TRAILING_PERIOD_DAYS).toInt()
         val maximumRatioPercentage =
             ((historicalDataStore.getDevelopedTrailMaximum(trailingPeriod) / historicalDataStore.lastDevelopedPrice - 1.0) * 100.0)
         if (maximumRatioPercentage >= genome.getParameter(Parameter.DEVELOPED_BUYING_PERCENT_CHANGE)
@@ -65,11 +56,12 @@ class ParameterizedPortfolio(
             <= genome.getParameter(Parameter.DEVELOPED_ALWAYS_BUYING_SHILLER_PE)
         ) {
             buyDeveloped(date.copy())
+            totalTransactions++
         }
     }
 
     private fun manageEmerging(date: Date) {
-        val trailingPeriod = genome.getParameter(Parameter.EMERGING_TRAILING_PERIOD_MONTHS).toInt()
+        val trailingPeriod = genome.getParameter(Parameter.EMERGING_TRAILING_PERIOD_DAYS).toInt()
         val maximumRatioPercentage =
             ((historicalDataStore.getEmergingTrailMaximum(trailingPeriod) / historicalDataStore.lastEmergingPrice - 1.0) * 100.0)
         if (maximumRatioPercentage >= genome.getParameter(Parameter.EMERGING_BUYING_PERCENT_CHANGE)
@@ -77,11 +69,12 @@ class ParameterizedPortfolio(
             >= genome.getParameter(Parameter.EMERGING_ALWAYS_BUYING_OVER_SHILLER_PE)
         ) {
             buyEmerging(date.copy())
+            totalTransactions++
         }
     }
 
     private fun manageCrb(date: Date) {
-        val trailingPeriod = genome.getParameter(Parameter.CRB_TRAILING_PERIOD_MONTHS).toInt()
+        val trailingPeriod = genome.getParameter(Parameter.CRB_TRAILING_PERIOD_DAYS).toInt()
         val maximumRatioPercentage =
             ((historicalDataStore.getCrbTrailMaximum(trailingPeriod) / historicalDataStore.lastCrbPrice - 1.0) * 100.0)
         if (maximumRatioPercentage >= genome.getParameter(Parameter.CRB_BUYING_PERCENT_CHANGE)
@@ -89,12 +82,14 @@ class ParameterizedPortfolio(
             <= genome.getParameter(Parameter.CRB_ALWAYS_BUYING_PRICE)
         ) {
             buyCrb(date.copy())
+            totalTransactions++
         }
     }
 
     private fun manageGold(date: Date) {
         if (historicalDataStore.lastDowToGoldRatio >= genome.getParameter(Parameter.GOLD_BUYING_DOW_TO_GOLD_VALUE)) {
             buyGold(date.copy())
+            totalTransactions++
         }
     }
 
@@ -129,6 +124,7 @@ class ParameterizedPortfolio(
                     >= genome.getParameter(parameter)
                 ) {
                     asset.saleDate = date.copy()
+                    totalTransactions++
                     when (asset.type) {
                         Asset.Type.DEVELOPED -> {
                             developedSaleProfits += asset.getCurrentValue(price)

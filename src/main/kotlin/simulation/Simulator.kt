@@ -177,6 +177,7 @@ object Simulator {
             portfolio.getCurrentAssetsValueByAssetType(Portfolio.Asset.Type.EMERGING),
             portfolio.getCurrentAssetsValueByAssetType(Portfolio.Asset.Type.CRB),
             portfolio.getCurrentAssetsValueByAssetType(Portfolio.Asset.Type.GOLD),
+            portfolio.totalTransactions
         )
         return Triple(profitsPercents, maxVolatility, strategyDetails)
     }

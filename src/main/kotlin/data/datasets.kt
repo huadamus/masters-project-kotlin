@@ -310,3 +310,13 @@ val CROSS_VALIDATION_DATASET_72_72 = Triple(
         Pair(Date(day = 1, month = 1, year = 2012), Date(day = 1, month = 1, year = 2018)),
     )
 )
+
+val CROSS_VALIDATION_DATASET_DAILY = Triple(
+    18, 1,
+    listOf(
+        Pair(Date(day = 1, month = 8, year = 2012), Date(day = 1, month = 2, year = 2014)),
+        Pair(Date(day = 1, month = 2, year = 2014), Date(day = 1, month = 8, year = 2015)),
+        Pair(Date(day = 1, month = 8, year = 2015), Date(day = 1, month = 2, year = 2017)),
+        Pair(Date(day = 1, month = 2, year = 2017), Date(day = 1, month = 8, year = 2018)),
+    )
+)

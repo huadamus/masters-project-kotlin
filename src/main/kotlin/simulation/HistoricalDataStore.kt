@@ -71,37 +71,37 @@ class HistoricalDataStore(
         updateCrbTrail(date)
     }
 
-    fun getDevelopedTrailMaximum(months: Int): Double {
+    fun getDevelopedTrailMaximum(days: Int): Double {
         if (developedTrail.isEmpty()) {
             return lastDevelopedPrice
         }
-        if (developedTrail.size < months) {
+        if (developedTrail.size < days) {
             return developedTrail.maxOf { it.second }
         }
         return developedTrail
-            .takeLast(months)
+            .takeLast(days)
             .maxOf { it.second }
     }
 
-    fun getEmergingTrailMaximum(months: Int): Double {
+    fun getEmergingTrailMaximum(days: Int): Double {
         if (emergingTrail.isEmpty()) {
             return lastEmergingPrice
         }
-        if (emergingTrail.size < months) {
+        if (emergingTrail.size < days) {
             return emergingTrail.maxOf { it.second }
         }
-        return emergingTrail.takeLast(months)
+        return emergingTrail.takeLast(days)
             .maxOf { it.second }
     }
 
-    fun getCrbTrailMaximum(months: Int): Double {
+    fun getCrbTrailMaximum(days: Int): Double {
         if (crbTrail.isEmpty()) {
             return lastCrbPrice
         }
-        if (crbTrail.size < months) {
+        if (crbTrail.size < days) {
             return crbTrail.maxOf { it.second }
         }
-        return crbTrail.takeLast(months)
+        return crbTrail.takeLast(days)
             .maxOf { it.second }
     }
 
