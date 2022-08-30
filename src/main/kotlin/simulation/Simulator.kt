@@ -160,6 +160,7 @@ object Simulator {
             portfolio.handle(date.copy())
             date = date.getRelativeDay(1)
         }
+        portfolio.assignFinalValues()
         val totalInvestedValue = portfolio.getTotalInvestedValue()
         val profitsPercents = if (totalInvestedValue == 0.0) {
             0.0
@@ -177,7 +178,8 @@ object Simulator {
             portfolio.getCurrentAssetsValueByAssetType(Portfolio.Asset.Type.EMERGING),
             portfolio.getCurrentAssetsValueByAssetType(Portfolio.Asset.Type.CRB),
             portfolio.getCurrentAssetsValueByAssetType(Portfolio.Asset.Type.GOLD),
-            portfolio.totalTransactions
+            portfolio.totalTransactions,
+            portfolio.assets.toSet()
         )
         return Triple(profitsPercents, maxVolatility, strategyDetails)
     }
@@ -206,6 +208,7 @@ object Simulator {
             portfolio.handle(date.copy())
             date = date.getRelativeDay(1)
         }
+        portfolio.assignFinalValues()
         val totalInvestedValue = portfolio.getTotalInvestedValue()
         val profitsPercents = if (totalInvestedValue == 0.0) {
             0.0
@@ -240,6 +243,7 @@ object Simulator {
             portfolio.handle(date.copy())
             date = date.getRelativeDay(1)
         }
+        portfolio.assignFinalValues()
         val totalInvestedValue = portfolio.getTotalInvestedValue()
         val profitsPercents = if (totalInvestedValue == 0.0) {
             0.0

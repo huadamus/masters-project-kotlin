@@ -2,10 +2,12 @@ package simulation.portfolio
 
 import simulation.HistoricalDataStore
 import model.Date
+import output.round
+import java.io.Serializable
 
 abstract class Portfolio(private val startDate: Date) {
     protected lateinit var historicalDataStore: HistoricalDataStore
-    protected val assets = mutableSetOf<Asset>()
+    val assets = mutableSetOf<Asset>()
     private var monthlyBalanceProportionValues = mutableListOf<Double>()
 
     protected var developedSaleProfits = 0.0
@@ -19,6 +21,35 @@ abstract class Portfolio(private val startDate: Date) {
             handleDetails(date)
             if (date.isNewMonth()) {
                 monthlyBalanceProportionValues.add(getBalanceProportion())
+            }
+        }
+    }
+
+    fun assignFinalValues() {
+        val lastDevelopedPrice = historicalDataStore.lastDevelopedPrice
+        val lastEmergingPrice = historicalDataStore.lastEmergingPrice
+        val lastCrbPrice = historicalDataStore.lastCrbPrice
+        val lastGoldPrice = historicalDataStore.lastGoldPrice
+        for (asset in assets) {
+            if (!asset.isSold()) {
+                val price: Double = when (asset.type) {
+                    Asset.Type.DEVELOPED -> {
+                        lastDevelopedPrice
+                    }
+
+                    Asset.Type.EMERGING -> {
+                        lastEmergingPrice
+                    }
+
+                    Asset.Type.CRB -> {
+                        lastCrbPrice
+                    }
+
+                    Asset.Type.GOLD -> {
+                        lastGoldPrice
+                    }
+                }
+                asset.saleValue = asset.getCurrentValue(price)
             }
         }
     }
@@ -59,7 +90,7 @@ abstract class Portfolio(private val startDate: Date) {
     }
 
     fun getTotalInvestedValue(): Double {
-        return assets.sumOf { it.purchaseValue } + assets.size * BROKERAGE_FEE
+        return assets.sumOf { it.purchaseValue } + assets.size * BROKERAGE_FEE + assets.filter { it.saleDate != null }.size * BROKERAGE_FEE
     }
 
     fun getMaxMonthlyDownwardVolatility(): Double {
@@ -98,7 +129,7 @@ abstract class Portfolio(private val startDate: Date) {
     }
 
     private fun buyAssetReturnNumberAndCost(date: Date, price: Double): Pair<Int, Double> {
-        if(price <= 0.0) {
+        if (price <= 0.0) {
             throw Exception("Price ($price) at date $date is not a positive number!")
         }
         var resourcesLeft = RESOURCES_FOR_ONE_TRANSACTION
@@ -130,14 +161,17 @@ abstract class Portfolio(private val startDate: Date) {
                         asset.saleDate = date.copy()
                         developedSaleProfits += asset.getCurrentValue(lastDevelopedPrice)
                     }
+
                     Asset.Type.EMERGING -> {
                         asset.saleDate = date.copy()
                         emergingSaleProfits += asset.getCurrentValue(lastEmergingPrice)
                     }
+
                     Asset.Type.CRB -> {
                         asset.saleDate = date.copy()
                         crbSaleProfits += asset.getCurrentValue(lastCrbPrice)
                     }
+
                     Asset.Type.GOLD -> {
                         asset.saleDate = date.copy()
                         goldSaleProfits += asset.getCurrentValue(lastGoldPrice)
@@ -150,12 +184,14 @@ abstract class Portfolio(private val startDate: Date) {
     companion object {
         const val ONE_HUNDRED = 100.0
         const val RESOURCES_FOR_ONE_TRANSACTION = 10_000.0
-        const val BROKERAGE_FEE = 0.0
+        const val BROKERAGE_FEE = 200.0
     }
 
-    class Asset(val type: Type, val purchaseDate: Date, private val number: Int, val purchaseValue: Double) {
+    class Asset(val type: Type, val purchaseDate: Date, private val number: Int, val purchaseValue: Double) :
+        Serializable {
 
         var saleDate: Date? = null
+        var saleValue: Double? = null
 
         fun getCurrentValue(currentPrice: Double) = number * currentPrice
 
@@ -163,6 +199,10 @@ abstract class Portfolio(private val startDate: Date) {
 
         enum class Type {
             DEVELOPED, EMERGING, CRB, GOLD
+        }
+
+        override fun toString(): String {
+            return "Type: $type, Bought/sold for: ${purchaseValue.round()}/${saleValue?.round()}, Dates: $purchaseDate, $saleDate"
         }
     }
 }

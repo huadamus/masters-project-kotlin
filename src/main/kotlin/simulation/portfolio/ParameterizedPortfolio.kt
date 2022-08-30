@@ -124,6 +124,7 @@ class ParameterizedPortfolio(
                     >= genome.getParameter(parameter)
                 ) {
                     asset.saleDate = date.copy()
+                    asset.saleValue = asset.getCurrentValue(price)
                     totalTransactions++
                     when (asset.type) {
                         Asset.Type.DEVELOPED -> {

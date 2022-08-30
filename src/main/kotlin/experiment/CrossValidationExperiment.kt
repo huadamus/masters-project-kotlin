@@ -132,7 +132,7 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
             log("")
             log("${finalTestPeriods[i]} genomes:")
             log(
-                OutputPrintingManager.getReadableParameters(iterationOutcomes[i * 3])
+                OutputPrintingManager.getReadableParameters(iterationOutcomes[i * 3], finalTestPeriods[i].last().second)
             )
             log(
                 "${finalTestPeriods[i]} scores: ${System.lineSeparator()}${
@@ -140,7 +140,7 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
                 }"
             )
             printParametersTable(
-                iterationOutcomes[0] + iterationOutcomes[3] + iterationOutcomes[6] + iterationOutcomes[9],// + iterationOutcomes[12],
+                iterationOutcomes[0],// + iterationOutcomes[3] + iterationOutcomes[6] + iterationOutcomes[9] + iterationOutcomes[12],
                 iterationOutcomes[i * 3]
             )
             log("${finalTestPeriods[i]} buy-and-hold score: ${iterationOutcomes[i * 3 + 1][0]}")
@@ -172,7 +172,7 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
     }
 
     private fun showValidationOutcome(archive: List<List<OffensiveGenome>>) {
-        log("=====18 TO 21=====")
+        log("=====VERIFICATION=====")
         val iterationOutcomes = mutableListOf<List<SimulationOutcome>>()
 
         val buyAndHoldScore = Simulator.getScoreForBuyAndHold(
@@ -221,9 +221,14 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
                 DataLoader.loadShillerPESP500Ratio(),
                 DataLoader.loadDowToGoldData()
             )
+            val months = if (TESTING_PERIODS == 1) {
+                36
+            } else {
+                18
+            }
             iterationOutcomes += tester.test(archive[i].toList()).map { offensiveGenome ->
                 val output = SimulationOutcome(
-                    offensiveGenome.strategyDetailsWithDefensiveGenome!!.map { it.getTotalYearlyAverageProfit(18) }
+                    offensiveGenome.strategyDetailsWithDefensiveGenome!!.map { it.getTotalYearlyAverageProfit(months) }
                         .average(),
                     offensiveGenome.riskWithDefensiveGenome!!
                 )
@@ -237,7 +242,7 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
         for (i in 2 until 2 + dataset.third.size / dataset.second) {
             log("Iteration ${i - 1}: ${iterationOutcomes[i]}")
             log("Iteration ${i - 1} genomes:")
-            log(OutputPrintingManager.getReadableParameters(iterationOutcomes[i]))
+            log(OutputPrintingManager.getReadableParameters(iterationOutcomes[i], Date(1, 1, 2021)))
         }
 
         validationOutcomes.clear()

@@ -1,6 +1,7 @@
 package model
 
 import output.round
+import simulation.portfolio.Portfolio
 
 data class StrategyDetails(
     val period: Pair<Date, Date>,
@@ -13,6 +14,7 @@ data class StrategyDetails(
     val crbFinal: Double,
     val goldFinal: Double,
     val totalTransactions: Int,
+    val assetsList: Set<Portfolio.Asset>
 ) : java.io.Serializable {
 
     override fun toString(): String {

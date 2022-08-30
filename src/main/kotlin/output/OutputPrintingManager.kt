@@ -1,5 +1,6 @@
 package output
 
+import model.Date
 import model.OffensiveGenome
 import model.Parameter
 import simulation.SimulationOutcome
@@ -23,7 +24,7 @@ object OutputPrintingManager {
         return output
     }
 
-    fun getReadableParameters(outcomes: List<SimulationOutcome>): String {
+    fun getReadableParameters(outcomes: List<SimulationOutcome>, endDate: Date): String {
         val sortedOutcomes = outcomes.sortedByDescending { it.getHvValue() }
         val offensiveGenomes = sortedOutcomes.map { it.genome as OffensiveGenome }
         var output = ""
@@ -48,6 +49,52 @@ object OutputPrintingManager {
             output += "Strategy details:" + System.lineSeparator()
             for (strategyDetails in offensiveGenomes[i].strategyDetailsWithDefensiveGenome!!.withIndex()) {
                 output += "Strategy details ${strategyDetails.index + 1}: ${strategyDetails.value}" + System.lineSeparator()
+                output += "Asset details:" + System.lineSeparator()
+                for (asset in strategyDetails.value.assetsList.sortedBy { it.purchaseDate }) {
+                    output += "$asset" + System.lineSeparator()
+                }
+                if (strategyDetails.value.assetsList.isNotEmpty()) {
+                    output += "Purchases by months:" + System.lineSeparator()
+                    var date = strategyDetails.value.assetsList.minOf { it.purchaseDate }
+                    while (date < endDate) {
+                        output += "$date, ${
+                            strategyDetails.value.assetsList.filter {
+                                it.purchaseDate.year == date.year && it.purchaseDate.month == date.month
+                            }.size
+                        }" + System.lineSeparator()
+                        date = date.getDatePlusMonths(1)
+                    }
+                    output += "Sales by months:" + System.lineSeparator()
+                    if (strategyDetails.value.assetsList.any { it.isSold() }) {
+                        date = strategyDetails.value.assetsList.minOf { it.purchaseDate }
+                        while (date < endDate) {
+                            output += "$date, ${
+                                strategyDetails.value.assetsList.filter { it.isSold() }.filter {
+                                    it.saleDate!!.year == date.year && it.saleDate!!.month == date.month
+                                }.size
+                            }" + System.lineSeparator()
+                            date = date.getDatePlusMonths(1)
+                        }
+                    } else {
+                        output += "No sales done." + System.lineSeparator()
+                    }
+                    val avgTimeOfHeld = strategyDetails.value.assetsList.map {
+                        if (it.isSold()) {
+                            it.purchaseDate.getMonthsBetween(it.saleDate!!)
+                        } else {
+                            it.purchaseDate.getMonthsBetween(endDate)
+                        }
+                    }.average()
+                    output += "Average time of holding: $avgTimeOfHeld months" + System.lineSeparator()
+                    val avgSoldProfits = strategyDetails.value.assetsList.filter { it.isSold() }
+                        .map { it.saleValue!! / it.purchaseValue * 100.0 - 100.0 }.average()
+                    output += "Average profit of sold assets: ${avgSoldProfits.round()}%" + System.lineSeparator()
+                    val avgProfits = strategyDetails.value.assetsList
+                        .map { it.saleValue!! / it.purchaseValue * 100.0 - 100.0 }.average()
+                    output += "Average profit of all assets: ${avgProfits.round()}%" + System.lineSeparator()
+                } else {
+                    output += "No assets bought." + System.lineSeparator()
+                }
             }
             output += System.lineSeparator()
         }
