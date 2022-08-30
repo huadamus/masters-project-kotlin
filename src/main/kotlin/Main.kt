@@ -1,5 +1,6 @@
 @file:Suppress("FunctionName", "unused")
 
+import data.CROSS_VALIDATION_DATASET_72_72
 import devtools.getTrainingAndTestPeriods
 import model.Date
 import data.CROSS_VALIDATION_DATASET_DAILY_LONG
@@ -11,7 +12,7 @@ import kotlin.system.measureTimeMillis
 //metaheuristic
 const val POPULATION_SIZE = 100
 const val MOEA_D_VECTORS_COUNT = 100
-const val GENERATIONS = 2000
+const val GENERATIONS = 5000
 var CROSSOVER_CHANCE = 0.80
 var MUTATION_CHANCE = 0.09
 var TOURNAMENT_PICKS = 16
@@ -28,9 +29,10 @@ val ntga2ConfigurationParameters = listOf(0.73, 0.087, 18)
 val moeaDConfigurationParameters = listOf(0.83, 0.111)
 
 //simulation
-val CROSS_VALIDATION_DATASET = CROSS_VALIDATION_DATASET_DAILY_LONG
+val CROSS_VALIDATION_DATASETS = Pair(CROSS_VALIDATION_DATASET_72_72, CROSS_VALIDATION_DATASET_DAILY_LONG)
 const val TESTING_PERIODS = 1
 const val RUNS = 3
+const val DAILY = false
 
 //technical
 val logFile = File("results/log.txt")
@@ -53,9 +55,9 @@ fun main(args: Array<String>) {
         //log("gauss")
         //runGaussMutationExperiment()
         //log("conf")
-        //runConfigurationsExperiment()
+        runConfigurationsExperiment()
         //runConfigurationsTestExperiment()
-        runCrossValidationExperiment()
+        //runCrossValidationExperiment()
         //measureMaxSp500Falls()
     }
     log("Total time: ${time / 1000}s")
@@ -94,7 +96,12 @@ private fun runConfigurationsTestExperiment() {
 }
 
 private fun runCrossValidationExperiment() {
-    val crossValidationExperiment = CrossValidationExperiment(CROSS_VALIDATION_DATASET)
+    val dataset = if(DAILY) {
+        CROSS_VALIDATION_DATASETS.second
+    } else {
+        CROSS_VALIDATION_DATASETS.first
+    }
+    val crossValidationExperiment = CrossValidationExperiment(dataset)
     crossValidationExperiment.run()
     crossValidationExperiment.showResults()
 }

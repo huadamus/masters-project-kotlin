@@ -1,5 +1,6 @@
 package simulation.portfolio
 
+import DAILY
 import model.*
 import simulation.HistoricalDataStore
 
@@ -48,7 +49,10 @@ class ParameterizedPortfolio(
     }
 
     private fun manageDeveloped(date: Date) {
-        val trailingPeriod = genome.getParameter(Parameter.DEVELOPED_TRAILING_PERIOD_DAYS).toInt()
+        var trailingPeriod = genome.getParameter(Parameter.DEVELOPED_TRAILING_PERIOD_DAYS).toInt()
+        if(!DAILY) {
+            trailingPeriod *= 30
+        }
         val maximumRatioPercentage =
             ((historicalDataStore.getDevelopedTrailMaximum(trailingPeriod) / historicalDataStore.lastDevelopedPrice - 1.0) * 100.0)
         if (maximumRatioPercentage >= genome.getParameter(Parameter.DEVELOPED_BUYING_PERCENT_CHANGE)
@@ -61,7 +65,10 @@ class ParameterizedPortfolio(
     }
 
     private fun manageEmerging(date: Date) {
-        val trailingPeriod = genome.getParameter(Parameter.EMERGING_TRAILING_PERIOD_DAYS).toInt()
+        var trailingPeriod = genome.getParameter(Parameter.EMERGING_TRAILING_PERIOD_DAYS).toInt()
+        if(!DAILY) {
+            trailingPeriod *= 30
+        }
         val maximumRatioPercentage =
             ((historicalDataStore.getEmergingTrailMaximum(trailingPeriod) / historicalDataStore.lastEmergingPrice - 1.0) * 100.0)
         if (maximumRatioPercentage >= genome.getParameter(Parameter.EMERGING_BUYING_PERCENT_CHANGE)
@@ -74,7 +81,10 @@ class ParameterizedPortfolio(
     }
 
     private fun manageCrb(date: Date) {
-        val trailingPeriod = genome.getParameter(Parameter.CRB_TRAILING_PERIOD_DAYS).toInt()
+        var trailingPeriod = genome.getParameter(Parameter.CRB_TRAILING_PERIOD_DAYS).toInt()
+        if(!DAILY) {
+            trailingPeriod *= 30
+        }
         val maximumRatioPercentage =
             ((historicalDataStore.getCrbTrailMaximum(trailingPeriod) / historicalDataStore.lastCrbPrice - 1.0) * 100.0)
         if (maximumRatioPercentage >= genome.getParameter(Parameter.CRB_BUYING_PERCENT_CHANGE)

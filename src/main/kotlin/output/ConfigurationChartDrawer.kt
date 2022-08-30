@@ -16,19 +16,14 @@ class ConfigurationChartDrawer(private val purityValues: Array<Double>, private 
         "SPEA2",
         "NTGA2",
         "MOEA/D",
-        "cEA-HV",
-        "cNSGA-II",
-        "cSPEA2",
-        "cNTGA2",
-        "cMOEA/D",
     )
     private var algorithmOutcomes: List<List<SimulationOutcome>>? = null
 
     override fun createDataset(algorithmOutcomes: List<List<SimulationOutcome>>): XYDataset {
         this.algorithmOutcomes = algorithmOutcomes
-        if (algorithmOutcomes.size != 10) {
+        if (algorithmOutcomes.size != 5) {
             throw Exception(
-                "This chart drawer supports 10 algorithm outcomes"
+                "This chart drawer supports 5 algorithm outcomes"
             )
         }
         val dataset = XYSeriesCollection()
@@ -57,31 +52,6 @@ class ConfigurationChartDrawer(private val purityValues: Array<Double>, private 
             moeaDSeries.add(outcome.risk, outcome.profits)
         }
         dataset.addSeries(moeaDSeries)
-        val coevolutionHvParetoSeries = XYSeries(labels[5])
-        for (outcome in algorithmOutcomes[5]) {
-            coevolutionHvParetoSeries.add(outcome.risk, outcome.profits)
-        }
-        dataset.addSeries(coevolutionHvParetoSeries)
-        val coevolutionNsgaIISeries = XYSeries(labels[6])
-        for (outcome in algorithmOutcomes[6]) {
-            coevolutionNsgaIISeries.add(outcome.risk, outcome.profits)
-        }
-        dataset.addSeries(coevolutionNsgaIISeries)
-        val coevolutionSpea2Series = XYSeries(labels[7])
-        for (outcome in algorithmOutcomes[7]) {
-            coevolutionSpea2Series.add(outcome.risk, outcome.profits)
-        }
-        dataset.addSeries(coevolutionSpea2Series)
-        val coevolutionNtga2Series = XYSeries(labels[8])
-        for (outcome in algorithmOutcomes[8]) {
-            coevolutionNtga2Series.add(outcome.risk, outcome.profits)
-        }
-        dataset.addSeries(coevolutionNtga2Series)
-        val coevolutionMoeaDSeries = XYSeries(labels[9])
-        for (outcome in algorithmOutcomes[9]) {
-            coevolutionMoeaDSeries.add(outcome.risk, outcome.profits)
-        }
-        dataset.addSeries(coevolutionMoeaDSeries)
         return dataset
     }
 

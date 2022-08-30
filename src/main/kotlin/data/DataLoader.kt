@@ -1,5 +1,6 @@
 package data
 
+import DAILY
 import model.ShareData
 import model.Date
 import java.io.File
@@ -27,14 +28,22 @@ object DataLoader {
 
     fun loadDevelopedData(): Map<Date, Double> {
         if (developedData == null) {
-            developedData = loadStockMarketData(DEVELOPED_DAILY_DATA_FILENAME)
+            developedData = if(DAILY) {
+                loadStockMarketData(DEVELOPED_DAILY_DATA_FILENAME)
+            } else {
+                loadGenericData(DEVELOPED_DATA_FILENAME)
+            }
         }
         return developedData!!
     }
 
     fun loadEmergingData(): Map<Date, Double> {
         if (emergingData == null) {
-            emergingData = loadGenericData(EMERGING_DAILY_DATA_FILENAME)
+            emergingData = if(DAILY) {
+                loadStockMarketData(EMERGING_DAILY_DATA_FILENAME)
+            } else {
+                loadGenericData(EMERGING_DATA_FILENAME)
+            }
         }
         return emergingData!!
     }

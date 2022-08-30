@@ -1,5 +1,6 @@
 package simulation.portfolio
 
+import DAILY
 import simulation.HistoricalDataStore
 import model.Date
 import output.round
@@ -18,8 +19,13 @@ abstract class Portfolio(private val startDate: Date) {
         historicalDataStore.updateLastPrices(date)
         historicalDataStore.updateTrails(date)
         if (date >= startDate) {
-            handleDetails(date)
+            if(DAILY) {
+                handleDetails(date)
+            }
             if (date.isNewMonth()) {
+                if(!DAILY) {
+                    handleDetails(date)
+                }
                 monthlyBalanceProportionValues.add(getBalanceProportion())
             }
         }
