@@ -32,7 +32,7 @@ val moeaDConfigurationParameters = listOf(0.83, 0.111)
 val CROSS_VALIDATION_DATASETS = Pair(CROSS_VALIDATION_DATASET_72_72, CROSS_VALIDATION_DATASET_DAILY_LONG)
 const val TESTING_PERIODS = 1
 const val RUNS = 3
-const val DAILY = false
+const val DAILY = true
 
 //technical
 val logFile = File("results/log.txt")
@@ -55,9 +55,9 @@ fun main(args: Array<String>) {
         //log("gauss")
         //runGaussMutationExperiment()
         //log("conf")
-        runConfigurationsExperiment()
+        //runConfigurationsExperiment()
         //runConfigurationsTestExperiment()
-        //runCrossValidationExperiment()
+        runCrossValidationExperiment()
         //measureMaxSp500Falls()
     }
     log("Total time: ${time / 1000}s")

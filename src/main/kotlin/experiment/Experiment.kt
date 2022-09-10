@@ -8,8 +8,8 @@ abstract class Experiment(protected val name: String) {
 
     fun showResults() {
         val outcomes = calculateAndPrintOutcomes()
-        //drawChart(outcomes)
-        saveChart(outcomes)
+        drawChart(outcomes)
+        //saveChart(outcomes)
     }
 
     abstract fun calculateAndPrintOutcomes(): List<List<SimulationOutcome>>

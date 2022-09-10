@@ -190,7 +190,7 @@ abstract class Portfolio(private val startDate: Date) {
     companion object {
         const val ONE_HUNDRED = 100.0
         const val RESOURCES_FOR_ONE_TRANSACTION = 10_000.0
-        const val BROKERAGE_FEE = 200.0
+        const val BROKERAGE_FEE = 50.0
     }
 
     class Asset(val type: Type, val purchaseDate: Date, private val number: Int, val purchaseValue: Double) :

@@ -4,6 +4,7 @@ import model.Date
 import model.OffensiveGenome
 import model.Parameter
 import simulation.SimulationOutcome
+import simulation.portfolio.Portfolio
 
 object OutputPrintingManager {
 
@@ -92,6 +93,10 @@ object OutputPrintingManager {
                     val avgProfits = strategyDetails.value.assetsList
                         .map { it.saleValue!! / it.purchaseValue * 100.0 - 100.0 }.average()
                     output += "Average profit of all assets: ${avgProfits.round()}%" + System.lineSeparator()
+                    output += "Total spent on brokerage fees: ${
+                        (strategyDetails.value.assetsList.size * Portfolio.BROKERAGE_FEE +
+                                strategyDetails.value.assetsList.filter { it.isSold() }.size * Portfolio.BROKERAGE_FEE)
+                    }" + System.lineSeparator()
                 } else {
                     output += "No assets bought." + System.lineSeparator()
                 }
