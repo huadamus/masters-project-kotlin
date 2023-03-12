@@ -9,16 +9,17 @@ data class StrategyDetails(
     val emergingInvested: Double,
     val crbInvested: Double,
     val goldInvested: Double,
+    val brokerageFeesTotal: Double,
     val developedFinal: Double,
     val emergingFinal: Double,
     val crbFinal: Double,
     val goldFinal: Double,
-    val totalTransactions: Int,
-    val assetsList: Set<Portfolio.Asset>
+    val cashStatus: Set<Pair<Date, Double>>,
+    val assetsList: Set<Pair<Portfolio.Asset, String>>
 ) : java.io.Serializable {
 
     override fun toString(): String {
-        return "{$period, invested: ${developedInvested.round()}, ${
+        return "{$period, balances: ${Portfolio.INITIAL_CASH}/${cashStatus.last().second} invested: ${developedInvested.round()}, ${
             emergingInvested.round()
         }, ${crbInvested.round()}, ${goldInvested.round()}" +
                 ", final: ${developedFinal.round()}, ${emergingFinal.round()}, ${crbFinal.round()}, ${
@@ -29,7 +30,7 @@ data class StrategyDetails(
                     getGoldProfitPercentage(
                         period.first.getMonthsBetween(period.second)
                     ).round()
-                }%, total transactions: $totalTransactions}"
+                }%, total transactions: ${assetsList.size + assetsList.filter { it.first.isSold() }.size}}"
     }
 
     private fun getDevelopedProfitPercentage(months: Int): Double = if (developedInvested > 0.0) {

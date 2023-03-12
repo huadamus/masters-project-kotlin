@@ -1,6 +1,5 @@
 package simulation.portfolio
 
-import DAILY
 import model.*
 import simulation.HistoricalDataStore
 
@@ -18,7 +17,7 @@ class ParameterizedPortfolio(
 ) : Portfolio(startDate) {
 
     var genome: Genome = offensiveGenome
-    var totalTransactions = 0
+    private var totalTransactions = 0
 
     init {
         historicalDataStore = HistoricalDataStore(
@@ -32,7 +31,7 @@ class ParameterizedPortfolio(
     }
 
     override fun handleDetails(date: Date) {
-        if(date.isNewMonth()) {
+        if (date.isNewMonth()) {
             genome = if (historicalDataStore.lastShillerSP500PERatio > offensiveGenome.getChoiceParameter()) {
                 defensiveGenome.clone()
             } else {
@@ -49,57 +48,79 @@ class ParameterizedPortfolio(
     }
 
     private fun manageDeveloped(date: Date) {
-        var trailingPeriod = genome.getParameter(Parameter.DEVELOPED_TRAILING_PERIOD_DAYS).toInt()
-        if(!DAILY) {
-            trailingPeriod *= 30
-        }
+        val trailingPeriod = genome.getParameter(Parameter.DEVELOPED_TRAILING_PERIOD_DAYS).toInt()
+        val trailMaximum = historicalDataStore.getDevelopedTrailMaximum(trailingPeriod)
         val maximumRatioPercentage =
-            ((historicalDataStore.getDevelopedTrailMaximum(trailingPeriod) / historicalDataStore.lastDevelopedPrice - 1.0) * 100.0)
-        if (maximumRatioPercentage >= genome.getParameter(Parameter.DEVELOPED_BUYING_PERCENT_CHANGE)
-            || historicalDataStore.lastShillerSP500PERatio
-            <= genome.getParameter(Parameter.DEVELOPED_ALWAYS_BUYING_SHILLER_PE)
-        ) {
-            buyDeveloped(date.copy())
-            totalTransactions++
+            ((trailMaximum / historicalDataStore.lastDevelopedPrice - 1.0) * 100.0)
+        if (maximumRatioPercentage >= genome.getParameter(Parameter.DEVELOPED_BUYING_PERCENT_CHANGE)) {
+            buyDeveloped(
+                date.copy(),
+                "By percentage (developed maximum: $trailMaximum, last price: ${historicalDataStore.lastDevelopedPrice} maxRatioPerc: $maximumRatioPercentage, parameter: ${
+                    genome.getParameter(
+                        Parameter.DEVELOPED_BUYING_PERCENT_CHANGE
+                    )
+                }"
+            )
+        }
+        if (historicalDataStore.lastShillerSP500PERatio <= genome.getParameter(Parameter.DEVELOPED_ALWAYS_BUYING_SHILLER_PE)) {
+            buyDeveloped(
+                date.copy(),
+                "By always buying under shiller PE (shiller ratio: ${historicalDataStore.lastShillerSP500PERatio}, parameter: ${
+                    genome.getParameter(Parameter.DEVELOPED_ALWAYS_BUYING_SHILLER_PE)
+                }"
+            )
         }
     }
 
     private fun manageEmerging(date: Date) {
         var trailingPeriod = genome.getParameter(Parameter.EMERGING_TRAILING_PERIOD_DAYS).toInt()
-        if(!DAILY) {
-            trailingPeriod *= 30
-        }
+        val trailMaximum = historicalDataStore.getEmergingTrailMaximum(trailingPeriod)
         val maximumRatioPercentage =
-            ((historicalDataStore.getEmergingTrailMaximum(trailingPeriod) / historicalDataStore.lastEmergingPrice - 1.0) * 100.0)
-        if (maximumRatioPercentage >= genome.getParameter(Parameter.EMERGING_BUYING_PERCENT_CHANGE)
-            || historicalDataStore.lastShillerSP500PERatio
-            >= genome.getParameter(Parameter.EMERGING_ALWAYS_BUYING_OVER_SHILLER_PE)
-        ) {
-            buyEmerging(date.copy())
-            totalTransactions++
+            ((trailMaximum / historicalDataStore.lastEmergingPrice - 1.0) * 100.0)
+        if (maximumRatioPercentage >= genome.getParameter(Parameter.EMERGING_BUYING_PERCENT_CHANGE)) {
+            buyEmerging(
+                date.copy(),
+                "By percentage (developed maximum: $trailMaximum, last price: ${historicalDataStore.lastEmergingPrice} maxRatioPerc: $maximumRatioPercentage, parameter: ${
+                    genome.getParameter(
+                        Parameter.EMERGING_BUYING_PERCENT_CHANGE
+                    )
+                }"
+            )
+        }
+        if (historicalDataStore.lastShillerSP500PERatio >= genome.getParameter(Parameter.EMERGING_ALWAYS_BUYING_OVER_SHILLER_PE)) {
+            buyEmerging(
+                date.copy(),
+                "By always buying over shiller PE (shiller ratio: ${historicalDataStore.lastShillerSP500PERatio}, parameter: ${
+                    genome.getParameter(Parameter.EMERGING_ALWAYS_BUYING_OVER_SHILLER_PE)
+                }"
+            )
         }
     }
 
     private fun manageCrb(date: Date) {
         var trailingPeriod = genome.getParameter(Parameter.CRB_TRAILING_PERIOD_DAYS).toInt()
-        if(!DAILY) {
-            trailingPeriod *= 30
-        }
+        val trailMaximum = historicalDataStore.getCrbTrailMaximum(trailingPeriod)
         val maximumRatioPercentage =
-            ((historicalDataStore.getCrbTrailMaximum(trailingPeriod) / historicalDataStore.lastCrbPrice - 1.0) * 100.0)
-        if (maximumRatioPercentage >= genome.getParameter(Parameter.CRB_BUYING_PERCENT_CHANGE)
-            || historicalDataStore.lastCrbPrice
-            <= genome.getParameter(Parameter.CRB_ALWAYS_BUYING_PRICE)
-        ) {
-            buyCrb(date.copy())
-            totalTransactions++
+            ((trailMaximum / historicalDataStore.lastCrbPrice - 1.0) * 100.0)
+        if (maximumRatioPercentage >= genome.getParameter(Parameter.CRB_BUYING_PERCENT_CHANGE)) {
+            buyCrb(date.copy(), "By percentage (crb maximum: $trailMaximum, last price: ${historicalDataStore.lastCrbPrice} maxRatioPerc: $maximumRatioPercentage, parameter: ${
+                genome.getParameter(
+                    Parameter.CRB_BUYING_PERCENT_CHANGE
+                )
+            }")
+        }
+        if (historicalDataStore.lastCrbPrice <= genome.getParameter(Parameter.CRB_ALWAYS_BUYING_PRICE)) {
+            buyCrb(date.copy(), "By always buying below price (last price: ${historicalDataStore.lastCrbPrice}, parameter: ${
+                genome.getParameter(Parameter.CRB_ALWAYS_BUYING_PRICE)
+            }")
         }
     }
 
     private fun manageGold(date: Date) {
         if (historicalDataStore.lastDowToGoldRatio >= genome.getParameter(Parameter.GOLD_BUYING_DOW_TO_GOLD_VALUE)) {
-            buyGold(date.copy())
-            totalTransactions++
+            buyGold(date.copy(), "By always buying over dow to gold (dowtogold ratio: ${historicalDataStore.lastDowToGoldRatio}, parameter: ${
+                genome.getParameter(Parameter.GOLD_BUYING_DOW_TO_GOLD_VALUE)
+            }")
         }
     }
 
@@ -108,46 +129,64 @@ class ParameterizedPortfolio(
         val lastEmergingPrice = historicalDataStore.lastEmergingPrice
         val lastCrbPrice = historicalDataStore.lastCrbPrice
         val lastGoldPrice = historicalDataStore.lastGoldPrice
-        for (asset in assets) {
-            if (!asset.isSold()) {
+        for (asset in assetsAndReasonsForBuying) {
+            if (!asset.first.isSold()) {
                 var price: Double
                 var parameter: Parameter
-                when (asset.type) {
+                when (asset.first.type) {
                     Asset.Type.DEVELOPED -> {
                         price = lastDevelopedPrice
                         parameter = Parameter.DEVELOPED_SELLING_PERCENT_CHANGE
                     }
+
                     Asset.Type.EMERGING -> {
                         price = lastEmergingPrice
                         parameter = Parameter.EMERGING_SELLING_PERCENT_CHANGE
                     }
+
                     Asset.Type.CRB -> {
                         price = lastCrbPrice
                         parameter = Parameter.CRB_SELLING_PERCENT_CHANGE
                     }
+
                     Asset.Type.GOLD -> {
                         price = lastGoldPrice
                         parameter = Parameter.GOLD_SELLING_PERCENT_CHANGE
                     }
                 }
-                if ((asset.getCurrentValue(price) / asset.purchaseValue - 1.0) * ONE_HUNDRED
+                if ((asset.first.getCurrentValue(price) / asset.first.purchaseValue - 1.0) * ONE_HUNDRED
                     >= genome.getParameter(parameter)
                 ) {
-                    asset.saleDate = date.copy()
-                    asset.saleValue = asset.getCurrentValue(price)
+                    asset.first.saleDate = date.copy()
+                    asset.first.saleValue = asset.first.getCurrentValue(price)
                     totalTransactions++
-                    when (asset.type) {
+                    when (asset.first.type) {
                         Asset.Type.DEVELOPED -> {
-                            developedSaleProfits += asset.getCurrentValue(price)
+                            developedSaleProfits += asset.first.getCurrentValue(price)
+                            cash += asset.first.getCurrentValue(price)
+                            cash -= BROKERAGE_FEE
+                            totalSpentOnBrokerageFees += BROKERAGE_FEE
                         }
+
                         Asset.Type.EMERGING -> {
-                            emergingSaleProfits += asset.getCurrentValue(price)
+                            emergingSaleProfits += asset.first.getCurrentValue(price)
+                            cash += asset.first.getCurrentValue(price)
+                            cash -= BROKERAGE_FEE
+                            totalSpentOnBrokerageFees += BROKERAGE_FEE
                         }
+
                         Asset.Type.CRB -> {
-                            crbSaleProfits += asset.getCurrentValue(price)
+                            crbSaleProfits += asset.first.getCurrentValue(price)
+                            cash += asset.first.getCurrentValue(price)
+                            cash -= BROKERAGE_FEE
+                            totalSpentOnBrokerageFees += BROKERAGE_FEE
                         }
+
                         Asset.Type.GOLD -> {
-                            goldSaleProfits += asset.getCurrentValue(price)
+                            goldSaleProfits += asset.first.getCurrentValue(price)
+                            cash += asset.first.getCurrentValue(price)
+                            cash -= BROKERAGE_FEE
+                            totalSpentOnBrokerageFees += BROKERAGE_FEE
                         }
                     }
                 }

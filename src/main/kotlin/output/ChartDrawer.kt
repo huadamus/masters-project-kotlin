@@ -118,8 +118,8 @@ abstract class ChartDrawer(private val chartTitle: String) : JFrame() {
     private fun createChart(dataset: XYDataset, title: String, constantAxes: Boolean): JFreeChart {
         val chart = ChartFactory.createXYLineChart(
             title,
-            "Największy spadek z miesiąca na miesiąc [%]",
-            "Średnioroczny zwrot [%]",
+            "Greatest fall of total value monthly [%]",//"Największy spadek z miesiąca na miesiąc [%]",
+            "Yearly average returns",//"Średnioroczny zwrot [%]",
             dataset,
             PlotOrientation.VERTICAL,
             true,

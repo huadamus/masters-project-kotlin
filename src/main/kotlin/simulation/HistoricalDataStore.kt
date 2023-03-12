@@ -105,24 +105,31 @@ class HistoricalDataStore(
             .maxOf { it.second }
     }
 
+    //TODO: If conducting DAILY operations, this needs to be adjusted
     private fun updateDevelopedTrail(date: Date) {
-        developedTrail += Pair(date, lastDevelopedPrice)
-        if (developedTrail.size > 12) {
-            developedTrail.removeFirst()
+        if(lastDevelopedPrice > 0.0) {
+            developedTrail += Pair(date, lastDevelopedPrice)
+            if (developedTrail.size > 12) {
+                developedTrail.removeFirst()
+            }
         }
     }
 
     private fun updateCrbTrail(date: Date) {
-        crbTrail.add(Pair(date, lastCrbPrice))
-        if (crbTrail.size > 12) {
-            crbTrail.removeFirst()
+        if(lastCrbPrice > 0.0) {
+            crbTrail.add(Pair(date, lastCrbPrice))
+            if (crbTrail.size > 12) {
+                crbTrail.removeFirst()
+            }
         }
     }
 
     private fun updateEmergingTrail(date: Date) {
-        emergingTrail.add(Pair(date, lastEmergingPrice))
-        if (emergingTrail.size > 12) {
-            emergingTrail.removeFirst()
+        if(lastEmergingPrice > 0.0) {
+            emergingTrail.add(Pair(date, lastEmergingPrice))
+            if (emergingTrail.size > 12) {
+                emergingTrail.removeFirst()
+            }
         }
     }
 }

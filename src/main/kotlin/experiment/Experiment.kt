@@ -1,5 +1,6 @@
 package experiment
 
+import DRAW_CHART
 import simulation.SimulationOutcome
 
 abstract class Experiment(protected val name: String) {
@@ -8,7 +9,9 @@ abstract class Experiment(protected val name: String) {
 
     fun showResults() {
         val outcomes = calculateAndPrintOutcomes()
-        drawChart(outcomes)
+        if(DRAW_CHART) {
+            drawChart(outcomes)
+        }
         //saveChart(outcomes)
     }
 

@@ -5,17 +5,12 @@ import MUTATION_CHANCE
 import RUNS
 import TOURNAMENT_PICKS
 import data.DataLoader
-import eaHvConfigurationParameters
 import log
 import metaheuristic.*
 import model.Date
-import moeaDConfigurationParameters
-import nsgaIIConfigurationParameters
 import ntga2ConfigurationParameters
-import output.ConfigurationChartDrawer
 import output.ConfigurationTestChartDrawer
 import simulation.*
-import spea2ConfigurationParameters
 import kotlin.system.measureTimeMillis
 
 class ConfigurationTestExperiment : Experiment("configuration") {
@@ -35,7 +30,7 @@ class ConfigurationTestExperiment : Experiment("configuration") {
         SelectionMethod.NTGA2,
         DataLoader.loadDevelopedData(),
         DataLoader.loadEmergingData(),
-        DataLoader.loadCrbAndOilData(),
+        DataLoader.loadCommodityData(),
         DataLoader.loadGoldUsdData(),
         DataLoader.loadShillerPESP500Ratio(),
         DataLoader.loadDowToGoldData()
@@ -49,7 +44,7 @@ class ConfigurationTestExperiment : Experiment("configuration") {
         SelectionMethod.NTGA2,
         DataLoader.loadDevelopedData(),
         DataLoader.loadEmergingData(),
-        DataLoader.loadCrbAndOilData(),
+        DataLoader.loadCommodityData(),
         DataLoader.loadGoldUsdData(),
         DataLoader.loadShillerPESP500Ratio(),
         DataLoader.loadDowToGoldData()
@@ -67,11 +62,17 @@ class ConfigurationTestExperiment : Experiment("configuration") {
         TOURNAMENT_PICKS = ntga2ConfigurationParameters[2] as Int
         timeValues += measureTimeMillis {
             genericGeneticAlgorithmNtga2State =
-                (Runner.runCombining(genericGeneticAlgorithmNtga2, state[0], RUNS) as GenericGeneticAlgorithmState)
+                (Runner.runCombining(
+                    "conf test generic",
+                    genericGeneticAlgorithmNtga2,
+                    state[0],
+                    RUNS
+                ) as GenericGeneticAlgorithmState)
         } / 1000
         genericGeneticAlgorithmNtga2State.save(genericNtgaName)
         timeValues += measureTimeMillis {
             coevolutionGeneticAlgorithmNtga2State = (Runner.runCombining(
+                "conf test coev",
                 coevolutionGeneticAlgorithmNtga2, state[1], RUNS
             ) as CoevolutionGeneticAlgorithmState)
         } / 1000
@@ -147,7 +148,7 @@ class ConfigurationTestExperiment : Experiment("configuration") {
                                         )
                                     })
                                 )
-                            } Time: ${if(timeValues.size > i) timeValues[i] else "N/A"}s" +
+                            } Time: ${if (timeValues.size > i) timeValues[i] else "N/A"}s" +
                             System.lineSeparator()
                 )
             }
@@ -158,7 +159,10 @@ class ConfigurationTestExperiment : Experiment("configuration") {
     }
 
     override fun drawChart(outcomes: List<List<SimulationOutcome>>) {
-        ConfigurationTestChartDrawer(purityValues.toTypedArray(), timeValues.map { it.toInt() }.toTypedArray()).drawChart(
+        ConfigurationTestChartDrawer(
+            purityValues.toTypedArray(),
+            timeValues.map { it.toInt() }.toTypedArray()
+        ).drawChart(
             outcomes
         )
     }

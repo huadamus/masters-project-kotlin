@@ -58,13 +58,13 @@ class ParametrizationExperiment : Experiment("parametrization") {
                                         SelectionMethod.NTGA2,
                                         DataLoader.loadDevelopedData(),
                                         DataLoader.loadEmergingData(),
-                                        DataLoader.loadCrbAndOilData(),
+                                        DataLoader.loadCommodityData(),
                                         DataLoader.loadGoldUsdData(),
                                         DataLoader.loadShillerPESP500Ratio(),
                                         DataLoader.loadDowToGoldData()
                                     )
                                     println("Running algorithm for $method $CROSSOVER_CHANCE $MUTATION_CHANCE $TOURNAMENT_PICKS")
-                                    (Runner.runCombining(
+                                    (Runner.runCombining("parametrization a",
                                         geneticAlgorithm, geneticAlgorithm.getEmptyState(), RUNS
                                     ) as GenericGeneticAlgorithmState).save(name)
                                 }
@@ -74,19 +74,19 @@ class ParametrizationExperiment : Experiment("parametrization") {
                                         name += "_${nearestDistanceParameter}"
                                         val geneticAlgorithm = GenericGeneticAlgorithm(
                                             name,
-                                            "Parameterization SPEA2 $crossoverChance $mutationChance $tournamentPicks $nearestDistanceParameter",
+                                            "Parameterization b $crossoverChance $mutationChance $tournamentPicks $nearestDistanceParameter",
                                             listOf(Pair(Date(1, 1, 1988), Date(1, 1, 2018))),
                                             360,
                                             true,
                                             SelectionMethod.SPEA2,
                                             DataLoader.loadDevelopedData(),
                                             DataLoader.loadEmergingData(),
-                                            DataLoader.loadCrbAndOilData(),
+                                            DataLoader.loadCommodityData(),
                                             DataLoader.loadGoldUsdData(),
                                             DataLoader.loadShillerPESP500Ratio(),
                                             DataLoader.loadDowToGoldData()
                                         )
-                                        (Runner.runCombining(
+                                        (Runner.runCombining("parametrization b",
                                             geneticAlgorithm, geneticAlgorithm.getEmptyState(), RUNS
                                         ) as GenericGeneticAlgorithmState).save(name)
                                     }
@@ -104,12 +104,12 @@ class ParametrizationExperiment : Experiment("parametrization") {
                                             SelectionMethod.NTGA2,
                                             DataLoader.loadDevelopedData(),
                                             DataLoader.loadEmergingData(),
-                                            DataLoader.loadCrbAndOilData(),
+                                            DataLoader.loadCommodityData(),
                                             DataLoader.loadGoldUsdData(),
                                             DataLoader.loadShillerPESP500Ratio(),
                                             DataLoader.loadDowToGoldData()
                                         )
-                                        (Runner.runCombining(
+                                        (Runner.runCombining("parametrization c",
                                             geneticAlgorithm, geneticAlgorithm.getEmptyState(), RUNS
                                         ) as GenericGeneticAlgorithmState).save(name)
                                     }
@@ -132,12 +132,12 @@ class ParametrizationExperiment : Experiment("parametrization") {
                                 true,
                                 DataLoader.loadDevelopedData(),
                                 DataLoader.loadEmergingData(),
-                                DataLoader.loadCrbAndOilData(),
+                                DataLoader.loadCommodityData(),
                                 DataLoader.loadGoldUsdData(),
                                 DataLoader.loadShillerPESP500Ratio(),
                                 DataLoader.loadDowToGoldData()
                             )
-                            (Runner.runCombining(
+                            (Runner.runCombining("parametrization d",
                                 algorithm, algorithm.getEmptyState(), RUNS
                             ) as GenericGeneticAlgorithmState).save(name)
                         }
@@ -197,7 +197,7 @@ class ParametrizationExperiment : Experiment("parametrization") {
                             val name = "parametrization_moead_${
                                 realCrossoverChance
                             }_${realMutationChance}_${moeaDT}"
-                            results += Ntga2Result(
+                            results += MoeaDResult(
                                 realCrossoverChance,
                                 realMutationChance,
                                 -1,

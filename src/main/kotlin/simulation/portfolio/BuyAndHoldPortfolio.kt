@@ -42,7 +42,7 @@ open class BuyAndHoldPortfolio(
                     && historicalDataStore.lastShillerSP500PERatio <= 20.0)
         ) {
             boughtInitialDeveloped = true
-            buyDeveloped(date.copy())
+            buyDeveloped(date.copy(), "b&h")
         }
     }
 
@@ -51,7 +51,7 @@ open class BuyAndHoldPortfolio(
                     && historicalDataStore.lastShillerSP500PERatio >= 25.0)
         ) {
             boughtInitialEmerging = true
-            buyEmerging(date.copy())
+            buyEmerging(date.copy(), "b&h")
         }
     }
 
@@ -60,7 +60,7 @@ open class BuyAndHoldPortfolio(
                     && historicalDataStore.lastCrbPrice <= 260.0)
         ) {
             boughtInitialCrb = true
-            buyCrb(date.copy())
+            buyCrb(date.copy(), "b&h")
         }
     }
 
@@ -69,7 +69,7 @@ open class BuyAndHoldPortfolio(
                     && historicalDataStore.lastDowToGoldRatio <= 15.0)
         ) {
             boughtInitialGold = true
-            buyGold(date.copy())
+            buyGold(date.copy(), "b&h")
         }
     }
 

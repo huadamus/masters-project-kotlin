@@ -19,7 +19,7 @@ fun hvParetoFitnessFunctionForSet(results: List<Pair<Double, Double>>): Double {
 fun invertedGenerationalDistanceForSet(results: List<Pair<Double, Double>>): Double {
     var totalDistance = 0.0
     for (result in results) {
-        totalDistance += sqrt(result.second.pow(2.0) + (100.0 - result.first).pow(2))
+        totalDistance += sqrt((result.second).pow(2.0) + (100.0 - result.first).pow(2))
     }
     return totalDistance / results.size
 }

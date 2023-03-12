@@ -1,38 +1,41 @@
 @file:Suppress("FunctionName", "unused")
 
-import data.CROSS_VALIDATION_DATASET_72_72
+import data.*
 import devtools.getTrainingAndTestPeriods
 import model.Date
-import data.CROSS_VALIDATION_DATASET_DAILY_LONG
-import data.DataLoader
 import experiment.*
+import simulation.Simulator
+import simulation.portfolio.Portfolio
 import java.io.File
 import kotlin.system.measureTimeMillis
 
 //metaheuristic
 const val POPULATION_SIZE = 100
 const val MOEA_D_VECTORS_COUNT = 100
-const val GENERATIONS = 5000
+const val GENERATIONS = 500
 var CROSSOVER_CHANCE = 0.80
-var MUTATION_CHANCE = 0.09
+var MUTATION_CHANCE = 0.11
 var TOURNAMENT_PICKS = 16
-var SPEA2_NEAREST_DISTANCE = 8
-var NTGA2_GS_GENERATIONS = 2
-var MOEA_D_T = 5
 var GAUSS_MUTATION = true
 const val ELITISM = 0
 
-val eaHvConfigurationParameters = listOf(0.79, 0.087, 15)
-val nsgaIIConfigurationParameters = listOf(0.76, 0.087, 18)
-val spea2ConfigurationParameters = listOf(0.77, 0.069, 17)
-val ntga2ConfigurationParameters = listOf(0.73, 0.087, 18)
-val moeaDConfigurationParameters = listOf(0.83, 0.111)
+const val DRAW_CHART = true
+const val SAVE_MIDPOINT = false
+
+val eaHvConfigurationParameters = listOf(0.77, 0.11, 11)
+val nsgaIIConfigurationParameters = listOf(0.77, 0.08, 19)
+val spea2ConfigurationParameters = listOf(0.87, 0.07, 11)
+var SPEA2_NEAREST_DISTANCE = 7
+val ntga2ConfigurationParameters = listOf(0.80, 0.11, 16)
+var NTGA2_GS_GENERATIONS = 7
+val moeaDConfigurationParameters = listOf(0.73, 0.11)
+var MOEA_D_T = 12
 
 //simulation
 val CROSS_VALIDATION_DATASETS = Pair(CROSS_VALIDATION_DATASET_72_72, CROSS_VALIDATION_DATASET_DAILY_LONG)
 const val TESTING_PERIODS = 1
-const val RUNS = 3
-const val DAILY = true
+const val RUNS = 1
+const val DAILY = false
 
 //technical
 val logFile = File("results/log.txt")
@@ -51,14 +54,15 @@ fun log(log: String) {
 
 fun main(args: Array<String>) {
     val time = measureTimeMillis {
+        //DataConverter.convert()
         //runParametrizationExperiment()
         //log("gauss")
         //runGaussMutationExperiment()
         //log("conf")
-        //runConfigurationsExperiment()
+        runConfigurationsExperiment()
         //runConfigurationsTestExperiment()
-        runCrossValidationExperiment()
-        //measureMaxSp500Falls()
+        //runCrossValidationExperiment()
+        //measureMaxSp500ProfitsAndFalls()
     }
     log("Total time: ${time / 1000}s")
     writer.close()
@@ -90,13 +94,13 @@ private fun runConfigurationsExperiment() {
 }
 
 private fun runConfigurationsTestExperiment() {
-    val configurationExperiment = ConfigurationTestExperiment()
-    configurationExperiment.run()
-    configurationExperiment.showResults()
+//    val configurationExperiment = ConfigurationTestExperiment()
+//    configurationExperiment.run()
+//    configurationExperiment.showResults()
 }
 
 private fun runCrossValidationExperiment() {
-    val dataset = if(DAILY) {
+    val dataset = if (DAILY) {
         CROSS_VALIDATION_DATASETS.second
     } else {
         CROSS_VALIDATION_DATASETS.first
@@ -106,12 +110,12 @@ private fun runCrossValidationExperiment() {
     crossValidationExperiment.showResults()
 }
 
-private fun measureMaxSp500Falls() {
+private fun measureMaxSp500ProfitsAndFalls() {
     val sp500Data = DataLoader.loadStockMarketData("data/sp500.csv")
-        .filter { it.key >= Date(1, 6, 2019) && it.key < Date(1, 1, 2021) }
+        .filter { it.key >= Date(1, 1, 2018) && it.key <= Date(1, 1, 2021) }
 
     var maxFall = 0.0
-    var currentMonth = 1
+    var currentMonth = 0
 
     var lastPrice = 0.0
     var currentPrice = 0.0
@@ -142,5 +146,15 @@ private fun measureMaxSp500Falls() {
         }
     }
 
-    println(maxFall)
+    val finalRatio = 100 *
+            ((finalPeriods.last().second * (Simulator.getInflation(
+                finalPeriods.last().first,
+                finalPeriods.first().first
+            )) / finalPeriods.first().second) - 1.0) /
+            (finalPeriods.first().first.getMonthsBetween(finalPeriods.last().first) / 12)
+
+    println("initial value: ${finalPeriods.first()}")
+    println("last value: ${finalPeriods.last()}")
+    println("ratio: $finalRatio")
+    println("max falls:$maxFall")
 }

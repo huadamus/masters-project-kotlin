@@ -1,5 +1,3 @@
-@file:Suppress("UNCHECKED_CAST")
-
 package metaheuristic
 
 import model.Date
@@ -31,7 +29,7 @@ class Tester(
                 shillerPESP500Data,
                 dowToGoldData
             )
-            output += testedSimulationOutcome
+            output += testedSimulationOutcome.clone()
         }
         val tested = paretoEvaluateOffensiveGenomes(output)
         return tested.sortedByDescending { it.profitsWithDefensiveGenome!! }

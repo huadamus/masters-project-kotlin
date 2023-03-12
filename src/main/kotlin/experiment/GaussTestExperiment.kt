@@ -34,12 +34,12 @@ class GaussMutationExperiment : Experiment("gauss") {
                 method,
                 DataLoader.loadDevelopedData(),
                 DataLoader.loadEmergingData(),
-                DataLoader.loadCrbAndOilData(),
+                DataLoader.loadCommodityData(),
                 DataLoader.loadGoldUsdData(),
                 DataLoader.loadShillerPESP500Ratio(),
                 DataLoader.loadDowToGoldData()
             )
-            (Runner.runCombining(
+            (Runner.runCombining("gauss test gauss_off",
                 geneticAlgorithm, geneticAlgorithm.getEmptyState(), RUNS
             ) as GenericGeneticAlgorithmState).save(name)
         }
@@ -55,12 +55,12 @@ class GaussMutationExperiment : Experiment("gauss") {
                 method,
                 DataLoader.loadDevelopedData(),
                 DataLoader.loadEmergingData(),
-                DataLoader.loadCrbAndOilData(),
+                DataLoader.loadCommodityData(),
                 DataLoader.loadGoldUsdData(),
                 DataLoader.loadShillerPESP500Ratio(),
                 DataLoader.loadDowToGoldData()
             )
-            (Runner.runCombining(
+            (Runner.runCombining("gauss test gauss_on",
                 geneticAlgorithm, geneticAlgorithm.getEmptyState(), RUNS
             ) as GenericGeneticAlgorithmState).save(name)
         }

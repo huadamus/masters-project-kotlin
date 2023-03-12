@@ -38,14 +38,14 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
                 SelectionMethod.NTGA2,
                 DataLoader.loadDevelopedData(),
                 DataLoader.loadEmergingData(),
-                DataLoader.loadCrbAndOilData(),
+                DataLoader.loadCommodityData(),
                 DataLoader.loadGoldUsdData(),
                 DataLoader.loadShillerPESP500Ratio(),
                 DataLoader.loadDowToGoldData()
             )
             geneticAlgorithms += algorithm
             var state = loadState(i)
-            state = Runner.runCombining(algorithm, state, RUNS) as GenericGeneticAlgorithmState
+            state = Runner.runCombining("cross", algorithm, state, RUNS) as GenericGeneticAlgorithmState
             state.save(name)
         }
     }
@@ -69,7 +69,7 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
                 true,
                 DataLoader.loadDevelopedData(),
                 DataLoader.loadEmergingData(),
-                DataLoader.loadCrbAndOilData(),
+                DataLoader.loadCommodityData(),
                 DataLoader.loadGoldUsdData(),
                 DataLoader.loadShillerPESP500Ratio(),
                 DataLoader.loadDowToGoldData()
@@ -85,7 +85,7 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
                 ),
                 DataLoader.loadDevelopedData(),
                 DataLoader.loadEmergingData(),
-                DataLoader.loadCrbAndOilData(),
+                DataLoader.loadCommodityData(),
                 DataLoader.loadGoldUsdData(),
                 DataLoader.loadDowToGoldData(),
                 DataLoader.loadShillerPESP500Ratio(),
@@ -101,7 +101,7 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
                 ),
                 DataLoader.loadDevelopedData(),
                 DataLoader.loadEmergingData(),
-                DataLoader.loadCrbAndOilData(),
+                DataLoader.loadCommodityData(),
                 DataLoader.loadGoldUsdData(),
                 DataLoader.loadDowToGoldData(),
                 DataLoader.loadShillerPESP500Ratio(),
@@ -132,7 +132,11 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
             log("")
             log("${finalTestPeriods[i]} genomes:")
             log(
-                OutputPrintingManager.getReadableParameters(iterationOutcomes[i * 3], finalTestPeriods[i].last().second)
+                OutputPrintingManager.getReadableParameters(
+                    iterationOutcomes[i * 3],
+                    finalTestPeriods[i].last().first,
+                    finalTestPeriods[i].last().second
+                )
             )
             log(
                 "${finalTestPeriods[i]} scores: ${System.lineSeparator()}${
@@ -179,7 +183,7 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
             Pair(Date(1, 1, 2018), Date(1, 1, 2021)),
             DataLoader.loadDevelopedData(),
             DataLoader.loadEmergingData(),
-            DataLoader.loadCrbAndOilData(),
+            DataLoader.loadCommodityData(),
             DataLoader.loadGoldUsdData(),
             DataLoader.loadDowToGoldData(),
             DataLoader.loadShillerPESP500Ratio(),
@@ -188,7 +192,7 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
             Pair(Date(1, 1, 2018), Date(1, 1, 2021)),
             DataLoader.loadDevelopedData(),
             DataLoader.loadEmergingData(),
-            DataLoader.loadCrbAndOilData(),
+            DataLoader.loadCommodityData(),
             DataLoader.loadGoldUsdData(),
             DataLoader.loadDowToGoldData(),
             DataLoader.loadShillerPESP500Ratio(),
@@ -216,7 +220,7 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
                 true,
                 DataLoader.loadDevelopedData(),
                 DataLoader.loadEmergingData(),
-                DataLoader.loadCrbAndOilData(),
+                DataLoader.loadCommodityData(),
                 DataLoader.loadGoldUsdData(),
                 DataLoader.loadShillerPESP500Ratio(),
                 DataLoader.loadDowToGoldData()
@@ -228,8 +232,7 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
             }
             iterationOutcomes += tester.test(archive[i].toList()).map { offensiveGenome ->
                 val output = SimulationOutcome(
-                    offensiveGenome.strategyDetailsWithDefensiveGenome!!.map { it.getTotalYearlyAverageProfit(months) }
-                        .average(),
+                    offensiveGenome.profitsWithDefensiveGenome!!,
                     offensiveGenome.riskWithDefensiveGenome!!
                 )
                 output.genome = offensiveGenome
@@ -242,7 +245,7 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
         for (i in 2 until 2 + dataset.third.size / dataset.second) {
             log("Iteration ${i - 1}: ${iterationOutcomes[i]}")
             log("Iteration ${i - 1} genomes:")
-            log(OutputPrintingManager.getReadableParameters(iterationOutcomes[i], Date(1, 1, 2021)))
+            log(OutputPrintingManager.getReadableParameters(iterationOutcomes[i], Date(1, 1, 2018), Date(1, 1, 2021)))
         }
 
         validationOutcomes.clear()
@@ -251,6 +254,9 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
 
     override fun drawChart(outcomes: List<List<SimulationOutcome>>) {
         CrossValidationChartDrawer(finalTestPeriods).drawChart(outcomes)
+        for(outcome in validationOutcomes) {
+            println(outcome)
+        }
         CrossValidation18to21ChartDrawer().drawChart(validationOutcomes)
     }
 
@@ -270,7 +276,7 @@ class CrossValidationExperiment(private val dataset: Triple<Int, Int, List<Pair<
     }
 
     fun StrategyDetails.getTotalYearlyAverageProfit(months: Int): Double {
-        if(developedInvested + emergingInvested + crbInvested + goldInvested == 0.0) {
+        if (developedInvested + emergingInvested + crbInvested + goldInvested == 0.0) {
             return 0.0
         }
         return ((developedFinal + emergingFinal + crbFinal + goldFinal) / (developedInvested + emergingInvested + crbInvested + goldInvested) - 1.0) * 100.0 * (12.0 / months.toDouble())

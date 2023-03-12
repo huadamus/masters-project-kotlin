@@ -9,7 +9,7 @@ import simulation.SimulationOutcome
 
 
 class ConfigurationChartDrawer(private val purityValues: Array<Double>, private val timeValues: Array<Int>) :
-    ChartDrawer("Badanie konfiguracji systemu") {
+    ChartDrawer("Long investment period experiment") {
     private val labels = arrayOf(
         "EA-HV",
         "NSGA-II",

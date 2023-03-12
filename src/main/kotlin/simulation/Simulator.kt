@@ -1,5 +1,6 @@
 package simulation
 
+import data.DataLoader
 import model.*
 import simulation.portfolio.ActiveManagementPortfolio
 import simulation.portfolio.BuyAndHoldPortfolio
@@ -156,32 +157,28 @@ object Simulator {
             selling
         )
         var date = beginningDate.getDateMinusMonths(12).copy()
-        while (date != endDate) {
+        while (date <= endDate) {
             portfolio.handle(date.copy())
             date = date.getRelativeDay(1)
         }
-        portfolio.assignFinalValues()
-        val totalInvestedValue = portfolio.getTotalInvestedValue()
-        val profitsPercents = if (totalInvestedValue == 0.0) {
-            0.0
-        } else {
-            (portfolio.getCurrentAssetsValue() / totalInvestedValue - 1.0) * 100
-        } / (beginningDate.getMonthsBetween(endDate) / 12)
-        val maxVolatility = portfolio.getMaxMonthlyDownwardVolatility()
+        //portfolio.assignFinalValues()
+        //val totalInvestedValue = portfolio.getTotalInvestedValue()
+        val profitsAndVolatility = getProfitsAndVolatilityWithInflation(beginningDate, endDate, portfolio)
         val strategyDetails = StrategyDetails(
             Pair(beginningDate.copy(), endDate.copy()),
             portfolio.getTotalInvestedByAssetType(Portfolio.Asset.Type.DEVELOPED),
             portfolio.getTotalInvestedByAssetType(Portfolio.Asset.Type.EMERGING),
             portfolio.getTotalInvestedByAssetType(Portfolio.Asset.Type.CRB),
             portfolio.getTotalInvestedByAssetType(Portfolio.Asset.Type.GOLD),
+            portfolio.totalSpentOnBrokerageFees,
             portfolio.getCurrentAssetsValueByAssetType(Portfolio.Asset.Type.DEVELOPED),
             portfolio.getCurrentAssetsValueByAssetType(Portfolio.Asset.Type.EMERGING),
             portfolio.getCurrentAssetsValueByAssetType(Portfolio.Asset.Type.CRB),
             portfolio.getCurrentAssetsValueByAssetType(Portfolio.Asset.Type.GOLD),
-            portfolio.totalTransactions,
-            portfolio.assets.toSet()
+            portfolio.balanceState.toSet(),
+            portfolio.assetsAndReasonsForBuying.toSet()
         )
-        return Triple(profitsPercents, maxVolatility, strategyDetails)
+        return Triple(profitsAndVolatility.first, profitsAndVolatility.second, strategyDetails)
     }
 
     private fun computeBuyAndHoldScore(
@@ -204,19 +201,11 @@ object Simulator {
             shillerSP500PERatioData
         )
         var date = beginningDate.getDateMinusMonths(12).copy()
-        while (date != endDate) {
+        while (date <= endDate) {
             portfolio.handle(date.copy())
             date = date.getRelativeDay(1)
         }
-        portfolio.assignFinalValues()
-        val totalInvestedValue = portfolio.getTotalInvestedValue()
-        val profitsPercents = if (totalInvestedValue == 0.0) {
-            0.0
-        } else {
-            (portfolio.getCurrentAssetsValue() / totalInvestedValue - 1.0) * 100
-        } / (beginningDate.getMonthsBetween(endDate) / 12)
-        val maxVolatility = portfolio.getMaxMonthlyDownwardVolatility()
-        return Pair(profitsPercents, maxVolatility)
+        return getProfitsAndVolatilityWithInflation(beginningDate, endDate, portfolio)
     }
 
     private fun computeActiveManagementScore(
@@ -239,19 +228,32 @@ object Simulator {
             shillerSP500PERatioData
         )
         var date = beginningDate.getDateMinusMonths(12).copy()
-        while (date != endDate) {
+        while (date <= endDate) {
             portfolio.handle(date.copy())
             date = date.getRelativeDay(1)
         }
-        portfolio.assignFinalValues()
-        val totalInvestedValue = portfolio.getTotalInvestedValue()
-        val profitsPercents = if (totalInvestedValue == 0.0) {
-            0.0
-        } else {
-            (portfolio.getCurrentAssetsValue() / totalInvestedValue - 1.0) * 100
-        } / (beginningDate.getMonthsBetween(endDate) / 12)
+        return getProfitsAndVolatilityWithInflation(beginningDate, endDate, portfolio)
+    }
+
+    private fun getProfitsAndVolatilityWithInflation(
+        beginningDate: Date,
+        endDate: Date,
+        portfolio: Portfolio
+    ): Pair<Double, Double> {
+        val profitsPercents = 100 *
+                ((portfolio.getBalance() * (getInflation(endDate, beginningDate)) / Portfolio.INITIAL_CASH) - 1.0) /
+                (beginningDate.getMonthsBetween(endDate) / 12)
         val maxVolatility = portfolio.getMaxMonthlyDownwardVolatility()
         return Pair(profitsPercents, maxVolatility)
+    }
+
+    fun getInflation(currentDate: Date, startDate: Date): Double {
+        val cpiValues = DataLoader.loadCpiData()
+        val currentCpi = cpiValues[currentDate]!!
+        val startCpi = cpiValues[startDate]!!
+
+        val inflation = startCpi / currentCpi
+        return inflation
     }
 
     private data class CalculationsOutcome(
